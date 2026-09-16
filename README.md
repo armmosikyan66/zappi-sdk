@@ -2,7 +2,7 @@
 
 Single source of truth for the Zappi deposit/withdraw contract. Replaces the
 triply-duplicated types that previously lived in `zappi-nest` DTOs, the Next.js
-BFF (`web/lib/api/types.ts`), and BitKong's Pydantic schemas.
+BFF (`web/lib/api/types.ts`).
 
 ## Install
 
@@ -37,7 +37,7 @@ const options = await client.getWithdrawOptions()
 const status = await client.getWithdrawalStatus('wd_123')
 ```
 
-### Partner deposit destination (BitKong / project-key)
+### Partner deposit destination (Example / project-key)
 
 Talks to nest's accumulation / liquidation / Lightning Address routes — not the Next.js BFF `GET /wallet/deposit/destination` path.
 
@@ -45,7 +45,7 @@ Talks to nest's accumulation / liquidation / Lightning Address routes — not th
 const options = await client.getDepositOptions()
 const destination = await client.createPartnerDepositDestination(
   { asset: 'usdc', network: 'base' },
-  { userId: 'bitkong-user-id' },
+  { userId: 'example-user-id' },
 )
 ```
 
@@ -69,13 +69,13 @@ const result = await runTwoPhaseWithdraw(client, signer, {
 })
 ```
 
-Partner product-wallet path (`partnerWithdraw`) — BitKong:
+Partner product-wallet path (`partnerWithdraw`) — Example:
 
 ```ts
 import { runTwoPhasePartnerWithdraw } from '@zappi/sdk'
 
 const result = await runTwoPhasePartnerWithdraw(client, signer, {
-  userId: 'bitkong-user-id',
+  userId: 'example-user-id',
   asset: 'USDC',
   networkId: 'solana',
   address: 'So111...',
