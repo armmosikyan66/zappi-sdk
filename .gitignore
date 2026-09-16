@@ -1,0 +1,6 @@
+dist/
+node_modules/
+.tsup-cache/
+coverage/
+*.tsbuildinfo
+.DS_Store

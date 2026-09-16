@@ -1,0 +1,83 @@
+{
+  "name": "@zappi/sdk",
+  "version": "0.1.0",
+  "description": "Zappi deposit/withdraw contract, API client, webhook verification, Spark USDB signer, and React Query hooks. Single source of truth shared by zappi-nest, the Next.js BFF, and partners like BitKong.",
+  "license": "MIT",
+  "type": "module",
+  "private": false,
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "development": "./src/index.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    },
+    "./sign": {
+      "types": "./dist/sign/index.d.ts",
+      "development": "./src/sign/index.ts",
+      "import": "./dist/sign/index.js",
+      "require": "./dist/sign/index.cjs",
+      "default": "./dist/sign/index.js"
+    },
+    "./two-phase": {
+      "types": "./dist/two-phase.d.ts",
+      "development": "./src/quote/two-phase.ts",
+      "import": "./dist/two-phase.js",
+      "require": "./dist/two-phase.cjs",
+      "default": "./dist/two-phase.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "development": "./src/react/index.ts",
+      "import": "./dist/react/index.js",
+      "require": "./dist/react/index.cjs",
+      "default": "./dist/react/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "clean": "rm -rf dist .tsup-cache",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "peerDependencies": {
+    "@buildonspark/spark-sdk": ">=0.9.0",
+    "@tanstack/react-query": ">=5.0.0",
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@buildonspark/spark-sdk": { "optional": true },
+    "@tanstack/react-query": { "optional": true },
+    "react": { "optional": true }
+  },
+  "devDependencies": {
+    "@buildonspark/spark-sdk": "^0.9.0",
+    "@tanstack/react-query": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.3.0",
+    "react": "^18.3.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
+}
