@@ -3,7 +3,7 @@
  * verification, and two-phase withdraw orchestrator.
  *
  * Optional subpaths:
- * - `@zappi/sdk/sign` — Spark USDB signer (peer: `@buildonspark/spark-sdk`)
+ * - `@zappi/sdk/sign` — Zappi wallet USDB signer (peer: `@buildonspark/spark-sdk`)
  * - `@zappi/sdk/react` — React Query hooks (peer: `react`, `@tanstack/react-query`)
  */
 
@@ -18,8 +18,8 @@ export {
   SOURCE_CUSTODY_CUSTODIAL,
   SOURCE_CUSTODY_WALLET,
   WITHDRAW_STATUS_AWAITING_SIGNATURE,
-  PRODUCT_SPARK_ACCOUNT_NUMBER,
-  DEFAULT_SPARK_NETWORK,
+  PRODUCT_WALLET_ACCOUNT_NUMBER,
+  DEFAULT_WALLET_NETWORK,
   DEFAULT_WEBHOOK_TOLERANCE_MS,
   WITHDRAW_QUOTE_TTL_MS,
   QUOTE_TOKEN_VERSION,
@@ -29,9 +29,8 @@ export {
 
 /* --------------------------------- amounts -------------------------------- */
 export {
-  MOCK_BTC_USD_CENTS_PER_SAT,
-  setBtcUsdRate,
-  getBtcUsdRate,
+  BtcUsdRate,
+  MissingBtcRateError,
   btcSatsToUsdCents,
   usdCentsToBtcSats,
   centsToUsdbUnits,
@@ -89,7 +88,6 @@ export {
   nestWithdrawAddress,
   toNestWithdrawBody,
 } from './client/zappi-client'
-
 /* client mappers (for partners that want raw nest → clean mapping) */
 export { mapNestDepositOptions, lookupDepositNetworkCopy } from './client/mappers/deposit-map'
 export {
@@ -114,9 +112,15 @@ export {
   depositQrPayload,
   depositWalletDeepLinks,
   toDepositDestination,
-  sparkDestinationChain,
+  walletDestinationChain,
   flashnetSourceAsset,
   type EvmTokenMeta,
+} from './client/presentation/deposit-presentation'
+
+/* ------------------------- legacy presentation alias ------------------------ */
+export {
+  /** @deprecated Renamed to `walletDestinationChain`. */
+  sparkDestinationChain,
 } from './client/presentation/deposit-presentation'
 
 /* --------------------------------- webhook ------------------------------- */
@@ -132,6 +136,7 @@ export {
 export {
   mintWithdrawQuoteToken,
   readWithdrawQuoteToken,
+  verifyWithdrawQuote,
   isWithdrawQuoteExpired,
   quoteFromPayload,
   quoteExpiresAt,
@@ -146,4 +151,11 @@ export type {
 } from './quote/two-phase'
 
 /* ---------------------------- signer port (types) ------------------------ */
-export type { SparkSigner, CreateSparkSignerOptions } from './sign/spark-signer-port'
+export type {
+  WalletSigner,
+  CreateWalletSignerOptions,
+  /** @deprecated Renamed to `WalletSigner`. */
+  SparkSigner,
+  /** @deprecated Renamed to `CreateWalletSignerOptions`. */
+  CreateSparkSignerOptions,
+} from './sign/wallet-signer-port'

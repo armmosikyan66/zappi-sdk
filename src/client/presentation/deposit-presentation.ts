@@ -132,10 +132,13 @@ export function toDepositDestination(
   }
 }
 
-/** Spark destination chain name for a network. */
-export function sparkDestinationChain(network: 'MAINNET' | 'REGTEST' | null): string {
+/** Destination chain name for a network, as the wallet rail reports it. */
+export function walletDestinationChain(network: 'MAINNET' | 'REGTEST' | null): string {
   return network === 'REGTEST' ? 'spark-regtest' : 'spark'
 }
+
+/** @deprecated Renamed to {@link walletDestinationChain}. */
+export const sparkDestinationChain = walletDestinationChain
 
 /** Flashnet source asset code for an asset id. */
 export function flashnetSourceAsset(asset: 'usdc' | 'usdt' | 'btc' | 'eth'): 'USDC' | 'USDT' | 'BTC' | 'ETH' {

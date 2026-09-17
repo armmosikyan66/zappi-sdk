@@ -5,6 +5,7 @@ import {
   quoteExpiresAt,
   quoteFromPayload,
   readWithdrawQuoteToken,
+  verifyWithdrawQuote,
   type WithdrawQuotePayload,
 } from '../src/quote/quote-token'
 import { buildCashierCombo } from '../src/combo'
@@ -52,6 +53,23 @@ describe('quote-token', () => {
     expect(readWithdrawQuoteToken(SECRET, 'v1.abc')).toBeNull()
     expect(readWithdrawQuoteToken(SECRET, 'v2.abc.def')).toBeNull()
     expect(readWithdrawQuoteToken(SECRET, '')).toBeNull()
+  })
+
+  it('verifyWithdrawQuote checks signature AND expiry', () => {
+    const fresh = mintWithdrawQuoteToken(SECRET, samplePayload())
+    expect(verifyWithdrawQuote(SECRET, fresh)).not.toBeNull()
+
+    const expired = mintWithdrawQuoteToken(
+      SECRET,
+      samplePayload({ expiresAt: new Date(Date.now() - 1000).toISOString() }),
+    )
+    // Signature valid, but expired → null.
+    expect(readWithdrawQuoteToken(SECRET, expired)).not.toBeNull()
+    expect(verifyWithdrawQuote(SECRET, expired)).toBeNull()
+
+    // Tampered → still null.
+    const tampered = fresh.slice(0, -3) + 'xxx'
+    expect(verifyWithdrawQuote(SECRET, tampered)).toBeNull()
   })
 
   it('isWithdrawQuoteExpired', () => {

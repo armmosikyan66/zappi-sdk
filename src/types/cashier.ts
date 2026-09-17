@@ -45,8 +45,11 @@ export type WithdrawCombo = CashierCombo
 /** Which ledger a balance / amount belongs to. */
 export type AccountCurrency = 'btc' | 'usd'
 
-/** Spark network selector used by the signer and address inspection. */
-export type SparkNetwork = 'MAINNET' | 'REGTEST'
+/**
+ * Zappi wallet network selector (Spark is the underlying rail; the public SDK
+ * surface talks about *the wallet's network*, not the rail vendor).
+ */
+export type WalletNetwork = 'MAINNET' | 'REGTEST'
 
 /** Custody model. Withdraw always resolves to `user-held` in current code. */
 export type CustodyMode = 'custodial' | 'user-held'

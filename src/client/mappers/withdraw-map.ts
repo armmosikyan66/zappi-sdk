@@ -12,7 +12,7 @@ import {
   isStableNetwork,
   parseCashierCombo,
 } from '../../combo'
-import { btcSatsToUsdCents, usdCentsToBtcSats } from '../../amounts'
+import { btcSatsToUsdCents, usdCentsToBtcSats, type BtcUsdRate } from '../../amounts'
 import { withdrawArrivalCopy } from '../../constants'
 import type {
   NestPartnerWithdrawBody,
@@ -100,12 +100,17 @@ export function nestWithdrawAddress(req: WithdrawalRequest): string | null {
 /**
  * Nest execute/estimate always take USD cents of Spark USDB, including BTC
  * destinations (Orchestra off-ramp). BTC UI amounts are converted with the
- * client spot helper until nest returns a live rate.
+ * caller-supplied spot rate — the SDK keeps **no** default/mock rate, so a
+ * BTC request without a rate throws {@link MissingBtcRateError} rather than
+ * pricing a real withdraw off a hardcoded number.
  */
-export function nestAmountCents(req: WithdrawalRequest): number | null {
+export function nestAmountCents(
+  req: WithdrawalRequest,
+  btcRate?: BtcUsdRate | number,
+): number | null {
   if (req.amountCents !== undefined && req.amountCents >= 1) return req.amountCents
   if (req.combo.asset === 'btc' && req.amountSats !== undefined && req.amountSats >= 1) {
-    const cents = btcSatsToUsdCents(req.amountSats)
+    const cents = btcSatsToUsdCents(req.amountSats, btcRate)
     return cents >= 1 ? cents : null
   }
   return null
@@ -116,20 +121,21 @@ export function mapNestEstimate(
   req: WithdrawalRequest,
   estimate: NestWithdrawEstimateResponse | null,
   maxWithdrawableCents?: number,
+  btcRate?: BtcUsdRate | number,
 ): WithdrawalEstimate {
   const isBtc = req.combo.asset === 'btc'
-  const amountCents = estimate?.amountCents ?? nestAmountCents(req)
+  const amountCents = estimate?.amountCents ?? nestAmountCents(req, btcRate)
   const feeCents = nullableNumber(estimate?.feeCents)
   const receiveCents = nullableNumber(estimate?.receiveCents)
   const maxSats =
-    maxWithdrawableCents !== undefined ? usdCentsToBtcSats(maxWithdrawableCents) : undefined
+    maxWithdrawableCents !== undefined ? usdCentsToBtcSats(maxWithdrawableCents, btcRate) : undefined
 
   if (isBtc) {
     const grossSats = req.amountSats
-    const feeSats = feeCents !== undefined ? usdCentsToBtcSats(feeCents) : undefined
+    const feeSats = feeCents !== undefined ? usdCentsToBtcSats(feeCents, btcRate) : undefined
     const netSats =
       receiveCents !== undefined
-        ? usdCentsToBtcSats(receiveCents)
+        ? usdCentsToBtcSats(receiveCents, btcRate)
         : grossSats !== undefined && feeSats !== undefined
           ? Math.max(0, grossSats - feeSats)
           : undefined

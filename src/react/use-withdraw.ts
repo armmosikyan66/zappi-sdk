@@ -10,7 +10,7 @@ import type {
   WithdrawalStatus,
 } from '../types/withdraw'
 import { runTwoPhaseWithdraw, type TwoPhaseSigner } from '../quote/two-phase'
-import type { SparkSigner } from '../sign/spark-signer-port'
+import type { WalletSigner } from '../sign/wallet-signer-port'
 
 export const withdrawKeys = {
   options: ['zappi', 'withdraw', 'options'] as const,
@@ -47,7 +47,7 @@ export function useWithdrawalQuote() {
 
 export interface UseConfirmWithdrawalOptions {
   /** Signer used when the first phase returns `needsSignature`. */
-  signer?: SparkSigner | TwoPhaseSigner | null
+  signer?: WalletSigner | TwoPhaseSigner | null
   /** Passkey step-up token. */
   authorizationToken?: string | null
 }

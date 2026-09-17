@@ -1,53 +1,57 @@
 import { describe, expect, it } from 'vitest'
 import {
+  BtcUsdRate,
+  MissingBtcRateError,
   btcSatsToUsdCents,
   centsToUsdbUnits,
   formatSats,
   formatUsdCents,
-  getBtcUsdRate,
-  MOCK_BTC_USD_CENTS_PER_SAT,
-  setBtcUsdRate,
   usdbUnitsToCents,
   usdCentsToBtcSats,
   USDB_UNITS_PER_CENT,
 } from '../src/amounts'
 
+const RATE = new BtcUsdRate(0.11625)
+
+describe('BtcUsdRate', () => {
+  it('rejects non-finite rates', () => {
+    expect(() => new BtcUsdRate(Number.NaN)).toThrow(RangeError)
+    expect(() => new BtcUsdRate(Number.POSITIVE_INFINITY)).toThrow(RangeError)
+  })
+
+  it('rejects negative rates', () => {
+    expect(() => new BtcUsdRate(-1)).toThrow(RangeError)
+  })
+
+  it('exposes usdPerBtc for display', () => {
+    expect(new BtcUsdRate(0.11625).usdPerBtc).toBeCloseTo(116_250, 5)
+  })
+})
+
 describe('amounts', () => {
-  it('converts sats to cents at the mock rate', () => {
-    expect(btcSatsToUsdCents(0)).toBe(0)
+  it('converts sats to cents at the given rate', () => {
+    expect(btcSatsToUsdCents(0, RATE)).toBe(0)
     // 1000 sats * 0.11625 = 116.25 -> round 116
-    expect(btcSatsToUsdCents(1000)).toBe(116)
+    expect(btcSatsToUsdCents(1000, RATE)).toBe(116)
+  })
+
+  it('accepts a raw number rate too', () => {
+    expect(btcSatsToUsdCents(2, 0.5)).toBe(1)
+  })
+
+  it('throws MissingBtcRateError without a rate', () => {
+    expect(() => btcSatsToUsdCents(1000)).toThrow(MissingBtcRateError)
+    expect(() => usdCentsToBtcSats(1000)).toThrow(MissingBtcRateError)
   })
 
   it('round-trips cents to sats (within rounding)', () => {
     const cents = 10_000
-    const sats = usdCentsToBtcSats(cents)
-    expect(btcSatsToUsdCents(sats)).toBe(cents)
-  })
-
-  it('respects an overridden rate', () => {
-    const original = getBtcUsdRate()
-    try {
-      setBtcUsdRate(0.5) // 1 sat = 0.5 cents
-      expect(btcSatsToUsdCents(2)).toBe(1)
-      expect(usdCentsToBtcSats(100)).toBe(200)
-    } finally {
-      setBtcUsdRate(original)
-    }
+    const sats = usdCentsToBtcSats(cents, RATE)
+    expect(btcSatsToUsdCents(sats, RATE)).toBe(cents)
   })
 
   it('returns 0 sats when rate is 0', () => {
-    const original = getBtcUsdRate()
-    try {
-      setBtcUsdRate(0)
-      expect(usdCentsToBtcSats(1000)).toBe(0)
-    } finally {
-      setBtcUsdRate(original)
-    }
-  })
-
-  it('exports the mock rate constant', () => {
-    expect(MOCK_BTC_USD_CENTS_PER_SAT).toBe(0.11625)
+    expect(usdCentsToBtcSats(1000, new BtcUsdRate(0))).toBe(0)
   })
 
   it('converts cents to USDB units (1 cent = 10_000 units)', () => {

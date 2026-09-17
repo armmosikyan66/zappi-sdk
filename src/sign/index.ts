@@ -1,23 +1,24 @@
 import { SparkWallet, type Bech32mTokenIdentifier } from '@buildonspark/spark-sdk'
-import { DEFAULT_SPARK_NETWORK } from '../constants'
+import { DEFAULT_WALLET_NETWORK } from '../constants'
 import type {
-  CreateSparkSignerOptions,
-  SparkSigner,
-} from './spark-signer-port'
+  CreateWalletSignerOptions,
+  WalletSigner,
+} from './wallet-signer-port'
 
 /**
- * In-process Spark USDB signer. Ports `bitkong/server/spark-sign/sign-usdb.mjs`
- * into a typed module — no subprocess, no argv, no env reads inside the lib.
+ * In-process Zappi wallet USDB signer (Spark is the underlying rail). Ports
+ * `bitkong/server/spark-sign/sign-usdb.mjs` into a typed module — no
+ * subprocess, no argv, no env reads inside the lib.
  *
- * The mnemonic arrives only via {@link CreateSparkSignerOptions.mnemonic}. The
- * library never logs it. The partner is responsible for secure storage — this
- * matches zappi-nest's non-custodial model (the server never holds user
+ * The mnemonic arrives only via {@link CreateWalletSignerOptions.mnemonic}.
+ * The library never logs it. The partner is responsible for secure storage —
+ * this matches zappi-nest's non-custodial model (the server never holds user
  * mnemonics; the Integration product wallet mnemonic lives with the partner).
  *
  * @example
  * ```ts
- * import { createSparkSigner } from '@zappi/sdk/sign'
- * const signer = await createSparkSigner({
+ * import { createWalletSigner } from '@zappi/sdk/sign'
+ * const signer = await createWalletSigner({
  *   mnemonic: process.env.ZAPPI_PRODUCT_MNEMONIC!,
  *   accountNumber: 0,
  *   network: 'MAINNET',
@@ -30,20 +31,20 @@ import type {
  * await signer.cleanup()
  * ```
  */
-export async function createSparkSigner(
-  opts: CreateSparkSignerOptions,
-): Promise<SparkSigner> {
+export async function createWalletSigner(
+  opts: CreateWalletSignerOptions,
+): Promise<WalletSigner> {
   const mnemonic = opts.mnemonic?.trim()
   if (!mnemonic) {
-    throw new SparkSignerError('MNEMONIC_REQUIRED', 'mnemonic is required')
+    throw new WalletSignerError('MNEMONIC_REQUIRED', 'mnemonic is required')
   }
 
   const accountNumber = opts.accountNumber ?? 0
   if (!Number.isInteger(accountNumber) || accountNumber < 0) {
-    throw new SparkSignerError('INVALID_ACCOUNT', 'accountNumber must be an integer >= 0')
+    throw new WalletSignerError('INVALID_ACCOUNT', 'accountNumber must be an integer >= 0')
   }
 
-  const network = (opts.network ?? DEFAULT_SPARK_NETWORK).toUpperCase() === 'REGTEST'
+  const network = (opts.network ?? DEFAULT_WALLET_NETWORK).toUpperCase() === 'REGTEST'
     ? 'REGTEST'
     : 'MAINNET'
 
@@ -58,27 +59,27 @@ export async function createSparkSigner(
     })
     wallet = initialized.wallet
   } catch (error) {
-    throw new SparkSignerError(
+    throw new WalletSignerError(
       'INIT_FAILED',
-      `Spark wallet initialization failed: ${error instanceof Error ? error.message : String(error)}`,
+      `Wallet initialization failed: ${error instanceof Error ? error.message : String(error)}`,
     )
   }
 
-  const signer: SparkSigner = {
+  const signer: WalletSigner = {
     async transferUsdb({ tokenIdentifier, tokenAmount, receiverSparkAddress }) {
       if (!wallet) {
-        throw new SparkSignerError('CLEANED_UP', 'Signer has been cleaned up')
+        throw new WalletSignerError('CLEANED_UP', 'Signer has been cleaned up')
       }
       const ti = tokenIdentifier?.trim()
       const rsa = receiverSparkAddress?.trim()
       if (!ti || !rsa) {
-        throw new SparkSignerError(
+        throw new WalletSignerError(
           'INVALID_PARAMS',
           'tokenIdentifier and receiverSparkAddress are required',
         )
       }
       if (typeof tokenAmount !== 'bigint' || tokenAmount <= 0n) {
-        throw new SparkSignerError('INVALID_PARAMS', 'tokenAmount must be a positive bigint')
+        throw new WalletSignerError('INVALID_PARAMS', 'tokenAmount must be a positive bigint')
       }
 
       try {
@@ -88,15 +89,15 @@ export async function createSparkSigner(
           receiverSparkAddress: rsa,
         })
         if (typeof sparkTxHash !== 'string' || !sparkTxHash.trim()) {
-          throw new SparkSignerError(
+          throw new WalletSignerError(
             'NO_HASH',
             'Spark SDK transferTokens did not return a hash',
           )
         }
         return { sparkTxHash: sparkTxHash.trim() }
       } catch (error) {
-        if (error instanceof SparkSignerError) throw error
-        throw new SparkSignerError(
+        if (error instanceof WalletSignerError) throw error
+        throw new WalletSignerError(
           'TRANSFER_FAILED',
           error instanceof Error ? error.message : String(error),
         )
@@ -126,8 +127,8 @@ export async function createSparkSigner(
   return signer
 }
 
-/** Error thrown by the Spark signer. */
-export class SparkSignerError extends Error {
+/** Error thrown by the Zappi wallet signer. */
+export class WalletSignerError extends Error {
   constructor(
     readonly code:
       | 'MNEMONIC_REQUIRED'
@@ -140,8 +141,16 @@ export class SparkSignerError extends Error {
     message: string,
   ) {
     super(message)
-    this.name = 'SparkSignerError'
+    this.name = 'WalletSignerError'
   }
 }
 
-export type { SparkSigner, CreateSparkSignerOptions }
+/* ------------------------- legacy aliases (0.1.x) ------------------------- */
+
+/** @deprecated Renamed to {@link createWalletSigner}. */
+export const createSparkSigner = createWalletSigner
+
+/** @deprecated Renamed to {@link WalletSignerError}. */
+export const SparkSignerError = WalletSignerError
+
+export type { WalletSigner, CreateWalletSignerOptions }

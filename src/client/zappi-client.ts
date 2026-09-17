@@ -21,7 +21,7 @@ import type {
   DepositDestination,
   DepositOption,
   LightningInvoice,
-  SparkWalletBalance,
+  WalletBalance,
 } from '../types/deposit'
 import type {
   NestAccumulationAddressRequest,
@@ -65,8 +65,14 @@ import type { DepositCombo } from '../types/cashier'
  * Authentication mode for a {@link ZappiClient} call.
  *
  * - `projectKey` — partner/server-to-server calls (`Authorization: Bearer <key>`).
- * - `session` — user-facing BFF calls that forward the user's access token
- *   via the `x-zappi-access-token` header and the browser cookie jar.
+ *   **Server only.** Constructing this kind in a browser throws — the project
+ *   API key must never be shipped to the client.
+ * - `session` — server-side BFF calls acting for a logged-in user: forwards
+ *   the user's access token via `x-zappi-access-token` plus the browser
+ *   cookie jar. **Server only.**
+ * - `bff` — browser-safe. Talks to your same-origin BFF with `credentials:
+ *   'include'` (cookie auth); sends no key. Point `apiUrl` at your BFF, not
+ *   at zappi-nest.
  */
 export type ZappiAuth =
   | { kind: 'projectKey'; projectApiKey: string }
@@ -85,6 +91,10 @@ export type ZappiAuth =
       forwardedHost?: string
       /** Forwarded proto. */
       forwardedProto?: string
+    }
+  | {
+      /** Browser-safe cookie auth against a same-origin BFF. No API key. */
+      kind: 'bff'
     }
 
 export interface ZappiClientOptions {
@@ -337,9 +347,14 @@ export class ZappiClient {
     })
   }
 
-  /** `GET /api/wallet/balance` → Spark readonly balance envelope. */
-  async getBalance(signal?: AbortSignal): Promise<SparkWalletBalance> {
-    return this.call<SparkWalletBalance>('wallet/balance', { signal })
+  /** `GET /api/wallet/balance` → readonly wallet balance envelope. */
+  async getWalletBalance(signal?: AbortSignal): Promise<WalletBalance> {
+    return this.call<WalletBalance>('wallet/balance', { signal })
+  }
+
+  /** @deprecated Renamed to {@link getWalletBalance}. */
+  async getBalance(signal?: AbortSignal): Promise<WalletBalance> {
+    return this.getWalletBalance(signal)
   }
 
   /* -------------------------------- Withdraw -------------------------------- */
@@ -586,6 +601,7 @@ export class ZappiClient {
       : undefined
 
     const url = `${this.apiUrl}/api/wallet/events`
+    assertServerSideAuth(this.defaultAuth, 'subscribeCashierEvents')
     const headers = this.buildHeaders(this.defaultAuth, undefined)
     headers.set('Accept', 'text/event-stream')
 
@@ -598,6 +614,7 @@ export class ZappiClient {
           headers,
           signal: controller.signal,
           cache: 'no-store',
+          credentials: this.defaultAuth.kind === 'bff' ? 'include' : undefined,
         })
         if (!res.ok || !res.body) {
           throw new ZappiApiError(res.status, res.statusText, await safeJson(res))
@@ -634,7 +651,11 @@ export class ZappiClient {
   private buildHeaders(auth: ZappiAuth, authorizationToken?: string | null): Headers {
     const headers = new Headers()
     headers.set('Accept', 'application/json')
-    headers.set('Authorization', `Bearer ${auth.kind === 'projectKey' ? auth.projectApiKey : auth.projectApiKey}`)
+
+    // `bff` never carries a key — it authenticates with the browser's cookies.
+    if (auth.kind !== 'bff') {
+      headers.set('Authorization', `Bearer ${auth.projectApiKey}`)
+    }
 
     if (auth.kind === 'session') {
       if (auth.accessToken) headers.set('x-zappi-access-token', auth.accessToken)
@@ -650,6 +671,7 @@ export class ZappiClient {
 
   private async call<T>(path: string, opts: CallOptions = {}): Promise<T> {
     const auth = opts.auth ?? this.defaultAuth
+    assertServerSideAuth(auth, 'ZappiClient.call')
     if (auth.kind === 'projectKey' && !auth.projectApiKey) {
       throw new ZappiApiError(503, 'Service Unavailable', {
         ok: false,
@@ -661,7 +683,6 @@ export class ZappiClient {
     const method = opts.method ?? 'GET'
     const headers = this.buildHeaders(auth, opts.authorizationToken)
     if (opts.body !== undefined) headers.set('Content-Type', 'application/json')
-
     const timeoutController = new AbortController()
     const timeout = setTimeout(
       () => timeoutController.abort(),
@@ -676,6 +697,7 @@ export class ZappiClient {
         headers,
         body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
         cache: 'no-store',
+        credentials: auth.kind === 'bff' ? 'include' : undefined,
         signal: timeoutController.signal,
       })
     } catch (error) {
@@ -702,6 +724,27 @@ export class ZappiClient {
 }
 
 /* --------------------------------- helpers -------------------------------- */
+
+/**
+ * Guard: `projectKey` / `session` auth embeds the project API key in headers,
+ * so using them from a browser would leak the key into any shipped bundle.
+ * `bff` is the only browser-safe kind. Runs once per call; cheap (`typeof
+ * window` check).
+ */
+function assertServerSideAuth(auth: ZappiAuth, where: string): void {
+  if (auth.kind === 'bff') return
+  const isBrowser =
+    typeof window !== 'undefined' &&
+    typeof window.document !== 'undefined' &&
+    window.document !== null
+  if (isBrowser) {
+    throw new Error(
+      `${where}: auth kind '${auth.kind}' carries the project API key and must only be ` +
+        `used server-side. In the browser, construct the client with ` +
+        `auth: { kind: 'bff' } pointed at your same-origin BFF (cookie auth, no key).`,
+    )
+  }
+}
 
 async function safeJson(res: Response): Promise<unknown> {
   try {

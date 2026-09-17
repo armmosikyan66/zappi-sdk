@@ -1,4 +1,4 @@
-import type { CustodyMode, NetworkId, SparkNetwork, WithdrawCombo } from './types/cashier'
+import type { CustodyMode, NetworkId, WalletNetwork, WithdrawCombo } from './types/cashier'
 import type { WithdrawNetworkOption } from './types/withdraw'
 
 /** Withdrawal-option network id → Flashnet destination chain. */
@@ -32,10 +32,10 @@ export const SOURCE_CUSTODY_WALLET = 'user-held' as const satisfies CustodyMode
 export const WITHDRAW_STATUS_AWAITING_SIGNATURE = 'awaiting_signature'
 
 /** HD account index for Integration product wallets created in the Zappi client. */
-export const PRODUCT_SPARK_ACCOUNT_NUMBER = 0
+export const PRODUCT_WALLET_ACCOUNT_NUMBER = 0
 
-/** Default Spark network when none is provided. */
-export const DEFAULT_SPARK_NETWORK: SparkNetwork = 'MAINNET'
+/** Default Zappi wallet network when none is provided. */
+export const DEFAULT_WALLET_NETWORK: WalletNetwork = 'MAINNET'
 
 /** Default webhook timestamp tolerance (5 minutes), matches nest config. */
 export const DEFAULT_WEBHOOK_TOLERANCE_MS = 300_000
@@ -47,7 +47,7 @@ export const WITHDRAW_QUOTE_TTL_MS = 2 * 60 * 1000
 export const QUOTE_TOKEN_VERSION = 'v1'
 
 export type WithdrawSourceWallet = {
-  sparkAddress: string
+  walletAddress: string
   accountNumber: number
 }
 

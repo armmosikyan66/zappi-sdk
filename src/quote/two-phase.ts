@@ -1,5 +1,5 @@
 import type { WithdrawalConfirmation } from '../types/withdraw'
-import type { SparkSigner } from '../sign/spark-signer-port'
+import type { WalletSigner } from '../sign/wallet-signer-port'
 import type { NestPartnerWithdrawBody, NestWithdrawExecuteResponse } from '../types/partner'
 import { mapPartnerExecuteToConfirmation } from '../client/mappers/withdraw-map'
 
@@ -31,6 +31,10 @@ export interface TwoPhaseSigner {
   }): Promise<{ sparkTxHash: string }>
 }
 
+/* ------------------------- legacy alias (0.1.x) ------------------------- */
+/** @deprecated The two-phase flow now speaks {@link WalletSigner}. */
+export type SparkSigner = WalletSigner
+
 export interface RunTwoPhaseWithdrawOptions {
   quoteId: string
   /** Passkey step-up token (`X-Zappi-Authorization`). Omit / null for none. */
@@ -60,7 +64,7 @@ export interface RunTwoPhaseWithdrawOptions {
  */
 export async function runTwoPhaseWithdraw(
   client: TwoPhaseClient,
-  signer: SparkSigner | TwoPhaseSigner | null,
+  signer: WalletSigner | TwoPhaseSigner | null,
   options: RunTwoPhaseWithdrawOptions,
 ): Promise<WithdrawalConfirmation> {
   const { quoteId, authorizationToken = null, signal } = options
@@ -99,11 +103,11 @@ export async function runTwoPhaseWithdraw(
  * 3. `partnerWithdraw({ ...body, sparkTxHash })` — complete the Orchestra order.
  *
  * Nest never holds the product mnemonic. The partner signs locally with
- * {@link createSparkSigner} from `@zappi/sdk/sign`.
+ * {@link createWalletSigner} from `@zappi/sdk/sign`.
  */
 export async function runTwoPhasePartnerWithdraw(
   client: PartnerWithdrawClient,
-  signer: SparkSigner | TwoPhaseSigner | null,
+  signer: WalletSigner | TwoPhaseSigner | null,
   body: NestPartnerWithdrawBody,
   options: Omit<RunTwoPhaseWithdrawOptions, 'quoteId'> = {},
 ): Promise<WithdrawalConfirmation> {

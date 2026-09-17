@@ -85,6 +85,23 @@ export function isWithdrawQuoteExpired(expiresAt: string, now: number = Date.now
   return Number.isNaN(ts) || ts <= now
 }
 
+/**
+ * Verify a quote token end-to-end: signature **and** expiry. Returns the
+ * payload on success; `null` when the token is tampered, malformed, or
+ * expired. Callers should prefer this over `readWithdrawQuoteToken` +
+ * `isWithdrawQuoteExpired` so expiry can never be forgotten.
+ */
+export function verifyWithdrawQuote(
+  secret: string,
+  token: string,
+  now: number = Date.now(),
+): WithdrawQuotePayload | null {
+  const payload = readWithdrawQuoteToken(secret, token)
+  if (!payload) return null
+  if (isWithdrawQuoteExpired(payload.expiresAt, now)) return null
+  return payload
+}
+
 /** Build a clean {@link WithdrawalQuote} from a decoded payload. */
 export function quoteFromPayload(
   quoteId: string,

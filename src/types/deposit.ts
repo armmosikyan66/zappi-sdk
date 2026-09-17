@@ -78,10 +78,10 @@ export interface CreateDepositAddressRequest {
   sourceToken?: string
 }
 
-/** Spark readonly balance envelope returned by the balance endpoint. */
-export interface SparkWalletBalance {
+/** Readonly wallet balance envelope returned by the balance endpoint. */
+export interface WalletBalance {
   ok: true
-  sparkAddress: string
+  walletAddress: string
   readonlyReady: boolean
   tokenBalances: Record<
     string,
@@ -90,6 +90,9 @@ export interface SparkWalletBalance {
   pendingTransfers: unknown[]
   recentTransfers: unknown[]
 }
+
+/** @deprecated Renamed to {@link WalletBalance}. */
+export type SparkWalletBalance = WalletBalance
 
 /**
  * Backend → frontend deposit event. Two kinds:
