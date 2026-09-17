@@ -1,4 +1,4 @@
-# @zappi/sdk
+# @zappimoney/zappi-sdk
 
 Single source of truth for the Zappi deposit/withdraw contract. Replaces the
 triply-duplicated types that previously lived in `zappi-nest` DTOs, the Next.js
@@ -7,7 +7,7 @@ BFF (`web/lib/api/types.ts`), and BitKong's Pydantic schemas.
 ## Install
 
 ```sh
-npm install @zappi/sdk
+npm install @zappimoney/zappi-sdk
 # optional subpaths (peer deps):
 npm install @buildonspark/spark-sdk   # for /sign
 npm install @tanstack/react-query react  # for /react
@@ -17,16 +17,16 @@ npm install @tanstack/react-query react  # for /react
 
 | Import | What you get | Peer deps |
 |--------|--------------|-----------|
-| `@zappi/sdk` | Types, constants, amount/combo/address utils, `ZappiClient`, webhook verify, quote-token, two-phase orchestrator | none |
-| `@zappi/sdk/sign` | `createSparkSigner()` — in-process Spark USDB signer | `@buildonspark/spark-sdk` |
-| `@zappi/sdk/react` | React Query hooks + `ZappiClientProvider` | `react`, `@tanstack/react-query` |
+| `@zappimoney/zappi-sdk` | Types, constants, amount/combo/address utils, `ZappiClient`, webhook verify, quote-token, two-phase orchestrator | none |
+| `@zappimoney/zappi-sdk/sign` | `createSparkSigner()` — in-process Spark USDB signer | `@buildonspark/spark-sdk` |
+| `@zappimoney/zappi-sdk/react` | React Query hooks + `ZappiClientProvider` | `react`, `@tanstack/react-query` |
 
 ## Quick start
 
 ### Core client
 
 ```ts
-import { ZappiClient } from '@zappi/sdk'
+import { ZappiClient } from '@zappimoney/zappi-sdk'
 
 const client = new ZappiClient({
   apiUrl: 'https://api.zappi.money',
@@ -54,8 +54,8 @@ const destination = await client.createPartnerDepositDestination(
 Session / BFF path (`confirmWithdrawal`):
 
 ```ts
-import { runTwoPhaseWithdraw } from '@zappi/sdk'
-import { createSparkSigner } from '@zappi/sdk/sign'
+import { runTwoPhaseWithdraw } from '@zappimoney/zappi-sdk'
+import { createSparkSigner } from '@zappimoney/zappi-sdk/sign'
 
 const signer = await createSparkSigner({
   mnemonic: process.env.ZAPPI_PRODUCT_MNEMONIC!, // partner-held, never logged
@@ -72,7 +72,7 @@ const result = await runTwoPhaseWithdraw(client, signer, {
 Partner product-wallet path (`partnerWithdraw`) — BitKong:
 
 ```ts
-import { runTwoPhasePartnerWithdraw } from '@zappi/sdk'
+import { runTwoPhasePartnerWithdraw } from '@zappimoney/zappi-sdk'
 
 const result = await runTwoPhasePartnerWithdraw(client, signer, {
   userId: 'bitkong-user-id',
@@ -87,7 +87,7 @@ const result = await runTwoPhasePartnerWithdraw(client, signer, {
 ### Webhook verification
 
 ```ts
-import { verifyZappiWebhook, parseWebhookEnvelope } from '@zappi/sdk'
+import { verifyZappiWebhook, parseWebhookEnvelope } from '@zappimoney/zappi-sdk'
 
 const ok = verifyZappiWebhook(rawBody, signature, timestamp, secret, 300_000)
 if (!ok) throw new Error('invalid signature')
@@ -98,7 +98,7 @@ const envelope = parseWebhookEnvelope(rawBody)
 
 ```tsx
 'use client'
-import { ZappiClientProvider, useWithdrawOptions } from '@zappi/sdk/react'
+import { ZappiClientProvider, useWithdrawOptions } from '@zappimoney/zappi-sdk/react'
 
 function App() {
   return (
