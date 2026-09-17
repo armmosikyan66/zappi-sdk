@@ -1,5 +1,5 @@
 {
-  "name": "@zappi/sdk",
+  "name": "@zappimoney/zappi-sdk",
   "version": "0.2.0",
   "description": "Zappi deposit/withdraw contract, API client, webhook verification, wallet USDB signer, and React Query hooks. Single source of truth shared by zappi-nest, the Next.js BFF, and partners like BitKong.",
   "license": "MIT",
@@ -24,28 +24,28 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "development": "./src/index.ts",
+      "development": "./dist/index.js",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs",
       "default": "./dist/index.js"
     },
     "./sign": {
       "types": "./dist/sign/index.d.ts",
-      "development": "./src/sign/index.ts",
+      "development": "./dist/sign/index.js",
       "import": "./dist/sign/index.js",
       "require": "./dist/sign/index.cjs",
       "default": "./dist/sign/index.js"
     },
     "./two-phase": {
       "types": "./dist/two-phase.d.ts",
-      "development": "./src/quote/two-phase.ts",
+      "development": "./dist/two-phase.js",
       "import": "./dist/two-phase.js",
       "require": "./dist/two-phase.cjs",
       "default": "./dist/two-phase.js"
     },
     "./react": {
       "types": "./dist/react/index.d.ts",
-      "development": "./src/react/index.ts",
+      "development": "./dist/react/index.js",
       "import": "./dist/react/index.js",
       "require": "./dist/react/index.cjs",
       "default": "./dist/react/index.js"
@@ -54,7 +54,8 @@
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",  "files": [
+  "types": "./dist/index.d.ts",
+  "files": [
     "dist",
     "README.md"
   ],
@@ -74,9 +75,15 @@
     "react": ">=18.0.0"
   },
   "peerDependenciesMeta": {
-    "@buildonspark/spark-sdk": { "optional": true },
-    "@tanstack/react-query": { "optional": true },
-    "react": { "optional": true }
+    "@buildonspark/spark-sdk": {
+      "optional": true
+    },
+    "@tanstack/react-query": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@buildonspark/spark-sdk": "^0.9.0",
