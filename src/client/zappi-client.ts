@@ -186,9 +186,8 @@ export class ZappiClient {
 
   /**
    * @deprecated Use {@link createStandingDepositAddress} for new integrations.
-   * Legacy Flashnet accumulation addresses are being phased out in favor of
-   * standing deposit addresses. Kept for rollback when
-   * `STANDING_DEPOSITS_ENABLED` is off.
+   * Legacy Flashnet accumulation addresses. New deposit flows always mint
+   * standing deposit addresses.
    *
    * `POST /api/wallet/accumulation-address` — create/reuse a stables/ETH destination.
    */
@@ -205,9 +204,8 @@ export class ZappiClient {
 
   /**
    * @deprecated Use {@link createStandingDepositAddress} for new integrations.
-   * Legacy Flashnet liquidation addresses are being phased out in favor of
-   * standing deposit addresses. Kept for rollback when
-   * `STANDING_DEPOSITS_ENABLED` is off.
+   * Legacy Flashnet liquidation addresses. New deposit flows always mint
+   * standing deposit addresses.
    *
    * `POST /api/wallet/liquidation-address` — create/reuse a BTC L1 destination.
    */
@@ -305,7 +303,7 @@ export class ZappiClient {
 
   /**
    * Partner deposit destination against nest (not the Next BFF).
-   * Branches Lightning / BTC mainnet / accumulation, then attaches catalog copy
+   * Branches Lightning / standing on-chain addresses, then attaches catalog copy
    * and QR / deep-link presentation.
    */
   async createPartnerDepositDestination(

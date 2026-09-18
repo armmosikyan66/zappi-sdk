@@ -21,7 +21,7 @@ export function isEvmStableNetwork(
 
 /**
  * EIP-681 ERC-20 transfer URI. Wallets that scan this send the token, not
- * native ETH. Amount is omitted — accumulation addresses accept any size.
+ * native ETH. Amount is omitted — standing deposit addresses accept any size.
  * https://eips.ethereum.org/EIPS/eip-681
  */
 export function evmErc20TransferUri(

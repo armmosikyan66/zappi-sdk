@@ -63,7 +63,7 @@ const options = await client.getWithdrawOptions()
 
 ### Partner deposit destination (Example / project-key)
 
-Talks to nest's accumulation / liquidation / Lightning Address routes — not the Next.js BFF `GET /wallet/deposit/destination` path.
+Talks to nest's standing deposit address / Lightning Address routes — not the Next.js BFF `GET /wallet/deposit/destination` path.
 
 ```ts
 const options = await client.getDepositOptions()
