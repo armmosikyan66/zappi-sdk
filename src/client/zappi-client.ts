@@ -30,10 +30,16 @@ import type {
   NestDepositOptionsResponse,
   NestLiquidationAddressRequest,
   NestLiquidationAddressResponse,
+  NestListStandingDepositsResponse,
   NestPartnerLightningAddressResponse,
+  NestPatchStandingDepositAddressRequest,
+  NestResolveStandingDepositsRequest,
+  NestResolveStandingDepositsResponse,
   NestSendInternalBody,
   NestSendInternalResponse,
   NestPartnerWithdrawBody,
+  NestStandingDepositAddressRequest,
+  NestStandingDepositAddressResponse,
   NestWithdrawBody,
   NestWithdrawEstimateResponse,
   NestWithdrawExecuteResponse,
@@ -178,7 +184,14 @@ export class ZappiClient {
     return mapNestDepositDestination(combo, res)
   }
 
-  /** `POST /api/wallet/accumulation-address` — create/reuse a stables/ETH destination. */
+  /**
+   * @deprecated Use {@link createStandingDepositAddress} for new integrations.
+   * Legacy Flashnet accumulation addresses are being phased out in favor of
+   * standing deposit addresses. Kept for rollback when
+   * `STANDING_DEPOSITS_ENABLED` is off.
+   *
+   * `POST /api/wallet/accumulation-address` — create/reuse a stables/ETH destination.
+   */
   async createAccumulationAddress(
     body: NestAccumulationAddressRequest,
     signal?: AbortSignal,
@@ -190,7 +203,14 @@ export class ZappiClient {
     })
   }
 
-  /** `POST /api/wallet/liquidation-address` — create/reuse a BTC L1 destination. */
+  /**
+   * @deprecated Use {@link createStandingDepositAddress} for new integrations.
+   * Legacy Flashnet liquidation addresses are being phased out in favor of
+   * standing deposit addresses. Kept for rollback when
+   * `STANDING_DEPOSITS_ENABLED` is off.
+   *
+   * `POST /api/wallet/liquidation-address` — create/reuse a BTC L1 destination.
+   */
   async createLiquidationAddress(
     body: NestLiquidationAddressRequest,
     signal?: AbortSignal,
@@ -200,6 +220,76 @@ export class ZappiClient {
       body,
       signal,
     })
+  }
+
+  /**
+   * `POST /api/wallet/standing-deposit-address` — create/reuse a Flashnet
+   * standing deposit address. One immutable instruction per
+   * (project, user, destination) returns per-source-chain deposit
+   * addresses. Replaces legacy accumulation + liquidation addresses for new
+   * integrations. Identical instructions replay; a changed destination
+   * needs a new user/reference (nest surfaces 409 INSTRUCTION_CONFLICT).
+   */
+  async createStandingDepositAddress(
+    body: NestStandingDepositAddressRequest,
+    signal?: AbortSignal,
+  ): Promise<NestStandingDepositAddressResponse> {
+    return this.call<NestStandingDepositAddressResponse>(
+      'wallet/standing-deposit-address',
+      { method: 'POST', body, signal },
+    )
+  }
+
+  /**
+   * `GET /api/wallet/standing-deposit-address/deposits?userId=&limit=&offset=` —
+   * pre-order deposit tracking with status and hold codes
+   * (standing_identity_pair, dust below route minimum,
+   * standing_tron_refund_requires_operator, …).
+   */
+  async listStandingDeposits(
+    userId: string,
+    opts: { limit?: number; offset?: number } = {},
+    signal?: AbortSignal,
+  ): Promise<NestListStandingDepositsResponse> {
+    const query = new URLSearchParams({ userId })
+    if (opts.limit != null) query.set('limit', String(opts.limit))
+    if (opts.offset != null) query.set('offset', String(opts.offset))
+    return this.call<NestListStandingDepositsResponse>(
+      `wallet/standing-deposit-address/deposits?${query.toString()}`,
+      { signal },
+    )
+  }
+
+  /**
+   * `PATCH /api/wallet/standing-deposit-address` — pause/resume. `enabled:
+   * false` pauses new source commitments (already signed transactions keep
+   * their recovery path); `true` resumes retryable pause holds. Pausing
+   * never refunds.
+   */
+  async patchStandingDepositAddress(
+    body: NestPatchStandingDepositAddressRequest,
+    signal?: AbortSignal,
+  ): Promise<NestStandingDepositAddressResponse> {
+    return this.call<NestStandingDepositAddressResponse>(
+      'wallet/standing-deposit-address',
+      { method: 'PATCH', body, signal },
+    )
+  }
+
+  /**
+   * `POST /api/wallet/standing-deposit-address/resolve` — request refunds for
+   * held deposits. Send `depositIds` (1..200, same address and asset;
+   * Bitcoin exactly one) or `batchId`, plus a source-chain `refundAddress`.
+   * 202 confirms enqueueing, not broadcast.
+   */
+  async resolveStandingDeposits(
+    body: NestResolveStandingDepositsRequest,
+    signal?: AbortSignal,
+  ): Promise<NestResolveStandingDepositsResponse> {
+    return this.call<NestResolveStandingDepositsResponse>(
+      'wallet/standing-deposit-address/resolve',
+      { method: 'POST', body, signal },
+    )
   }
 
   /** `POST /api/partner/wallet/lightning-address` — LNURL-pay address for a partner user. */
@@ -287,19 +377,22 @@ export class ZappiClient {
     }
 
     if (combo.asset === 'btc' && combo.network === 'mainnet') {
-      const res = await this.createLiquidationAddress(
+      const res = await this.createStandingDepositAddress(
         {
           userId: opts.userId,
-          nativeReference: opts.nativeReference,
-          idempotencyKey: `liq:deposit:${opts.userId}:btc:mainnet`,
+          sourceChain: 'bitcoin',
           destinationAsset: 'USDB',
+          nativeReference: opts.nativeReference,
+          idempotencyKey: `std:deposit:${opts.userId}:btc:mainnet`,
           ...(opts.recipientSparkAddress
             ? { destinationAddress: opts.recipientSparkAddress }
             : {}),
         },
         signal,
       )
-      const address = String(res.depositAddress ?? '').trim()
+      const address = String(
+        res.addresses?.bitcoin ?? res.depositAddress ?? '',
+      ).trim()
       if (!address) {
         throw new ZappiApiError(502, 'Bad Gateway', {
           ok: false,
@@ -307,24 +400,25 @@ export class ZappiClient {
           message: 'zappi-nest did not return a Bitcoin deposit address.',
         })
       }
-      return { address }
+      return { address, token: nestSourceTokenMeta(res) }
     }
 
-    const res = await this.createAccumulationAddress(
+    const res = await this.createStandingDepositAddress(
       {
         userId: opts.userId,
         sourceChain: combo.network,
-        sourceAsset: flashnetSourceAsset(combo.asset),
         destinationAsset: 'USDB',
         nativeReference: opts.nativeReference,
-        idempotencyKey: `acu:deposit:${opts.userId}:${combo.network}:${combo.asset}`,
+        idempotencyKey: `std:deposit:${opts.userId}:${combo.network}:${combo.asset}`,
         ...(opts.recipientSparkAddress
-          ? { recipientSparkAddress: opts.recipientSparkAddress }
+          ? { destinationAddress: opts.recipientSparkAddress }
           : {}),
       },
       signal,
     )
-    const address = String(res.depositAddress ?? '').trim()
+    const address = String(
+      res.addresses?.[combo.network] ?? res.depositAddress ?? '',
+    ).trim()
     if (!address) {
       throw new ZappiApiError(502, 'Bad Gateway', {
         ok: false,

@@ -65,20 +65,25 @@ function clientWith(handler: (req: Captured) => Response): {
 }
 
 describe('createPartnerDepositDestination', () => {
-  it('POSTs accumulation-address for USDC and maps nested sourceToken', async () => {
+  it('POSTs standing-deposit-address for USDC and maps nested sourceToken', async () => {
     const { client, calls } = clientWith((req) => {
       if (req.url.endsWith('/api/wallet/deposit-options')) {
         return jsonResponse(CATALOG)
       }
-      if (req.url.endsWith('/api/wallet/accumulation-address')) {
+      if (req.url.endsWith('/api/wallet/standing-deposit-address')) {
         return jsonResponse({
           ok: true,
-          accumulationAddressId: 'acc_1',
-          depositAddress: '0xAccum',
-          recipientSparkAddress: 'spark1product',
-          sourceChain: 'base',
-          sourceAsset: 'USDC',
+          mode: 'created',
+          created: true,
+          projectId: 'native',
+          ref: 'std:native:user_123:spark:USDB:spark1product',
+          destinationChain: 'spark',
           destinationAsset: 'USDB',
+          destinationAddress: 'spark1product',
+          addresses: { base: '0xStanding' },
+          depositAddress: '0xStanding',
+          sourceChain: 'base',
+          enabled: true,
           sourceToken: {
             chainId: 8453,
             contractAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
@@ -94,34 +99,39 @@ describe('createPartnerDepositDestination', () => {
       { userId: 'user_123' },
     )
 
-    expect(dest.address).toBe('0xAccum')
+    expect(dest.address).toBe('0xStanding')
     expect(dest.feesCopy).toBe('~$0.01–0.10')
     expect(dest.estimatedArrivalCopy).toBe('~1–3 min')
     expect(dest.tokenContract).toBe('0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913')
     expect(dest.qrPayload).toContain('ethereum:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913@8453/transfer')
 
-    const accum = calls.find((call) => call.url.endsWith('/api/wallet/accumulation-address'))
-    expect(accum?.method).toBe('POST')
-    expect(accum?.body).toMatchObject({
+    const standing = calls.find((call) => call.url.endsWith('/api/wallet/standing-deposit-address'))
+    expect(standing?.method).toBe('POST')
+    expect(standing?.body).toMatchObject({
       userId: 'user_123',
       sourceChain: 'base',
-      sourceAsset: 'USDC',
       destinationAsset: 'USDB',
-      idempotencyKey: 'acu:deposit:user_123:base:usdc',
+      idempotencyKey: 'std:deposit:user_123:base:usdc',
     })
   })
 
-  it('POSTs liquidation-address for BTC mainnet', async () => {
+  it('POSTs standing-deposit-address for BTC mainnet and picks addresses.bitcoin', async () => {
     const { client, calls } = clientWith((req) => {
       if (req.url.endsWith('/api/wallet/deposit-options')) return jsonResponse(CATALOG)
-      if (req.url.endsWith('/api/wallet/liquidation-address')) {
+      if (req.url.endsWith('/api/wallet/standing-deposit-address')) {
         return jsonResponse({
           ok: true,
-          addressId: 'liq_1',
-          depositAddress: 'bc1qtest',
+          mode: 'created',
+          created: true,
+          projectId: 'native',
+          ref: 'std:native:user_123:spark:USDB:spark1product',
           destinationChain: 'spark',
           destinationAsset: 'USDB',
           destinationAddress: 'spark1product',
+          addresses: { bitcoin: 'bc1qtest', base: '0xignore' },
+          depositAddress: 'bc1qtest',
+          sourceChain: 'bitcoin',
+          enabled: true,
         })
       }
       return jsonResponse({ ok: false }, 404)
@@ -134,12 +144,12 @@ describe('createPartnerDepositDestination', () => {
 
     expect(dest.address).toBe('bc1qtest')
     expect(dest.qrPayload).toBe('bitcoin:bc1qtest')
-    const liq = calls.find((call) => call.url.endsWith('/api/wallet/liquidation-address'))
-    expect(liq?.body).toMatchObject({
+    const standing = calls.find((call) => call.url.endsWith('/api/wallet/standing-deposit-address'))
+    expect(standing?.body).toMatchObject({
       userId: 'user_123',
-      nativeReference: 'user_123',
+      sourceChain: 'bitcoin',
       destinationAsset: 'USDB',
-      idempotencyKey: 'liq:deposit:user_123:btc:mainnet',
+      idempotencyKey: 'std:deposit:user_123:btc:mainnet',
     })
   })
 
@@ -198,15 +208,20 @@ describe('createPartnerDepositDestination', () => {
       if (req.url.endsWith('/api/wallet/deposit-options')) {
         return jsonResponse({ ok: true, options: [] })
       }
-      if (req.url.endsWith('/api/wallet/accumulation-address')) {
+      if (req.url.endsWith('/api/wallet/standing-deposit-address')) {
         return jsonResponse({
           ok: true,
-          accumulationAddressId: 'acc_1',
-          depositAddress: '0xAccum',
-          recipientSparkAddress: 'spark1product',
-          sourceChain: 'solana',
-          sourceAsset: 'USDC',
+          mode: 'created',
+          created: true,
+          projectId: 'native',
+          ref: 'std:native:user_123:spark:USDB:spark1product',
+          destinationChain: 'spark',
           destinationAsset: 'USDB',
+          destinationAddress: 'spark1product',
+          addresses: { solana: 'So1' },
+          depositAddress: 'So1',
+          sourceChain: 'solana',
+          enabled: true,
         })
       }
       return jsonResponse({ ok: false }, 404)

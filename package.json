@@ -1,6 +1,6 @@
 {
   "name": "@zappimoney/zappi-sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Zappi deposit/withdraw contract, API client, webhook verification, wallet USDB signer, and React Query hooks. Single source of truth shared by zappi-nest, the Next.js BFF, and partners like BitKong.",
   "license": "MIT",
   "author": "Zappi",

@@ -90,6 +90,98 @@ export interface NestLiquidationAddressResponse {
   destinationAddress: string
 }
 
+/** `POST /api/wallet/standing-deposit-address` body (project-key partner route). */
+export interface NestStandingDepositAddressRequest {
+  userId: string
+  /** Source chain the caller wants a deposit address for. The instruction spans all eligible chains. */
+  sourceChain: string
+  destinationAsset?: string
+  destinationChain?: string
+  destinationAddress?: string
+  feeBps?: number
+  slippageBps?: number
+  refundAddresses?: Record<string, string>
+  nativeReference?: string
+  idempotencyKey?: string
+}
+
+export interface NestStandingDepositAddressResponse {
+  ok: true
+  mode: 'cached' | 'created'
+  created: boolean
+  projectId: string
+  /** Customer reference sent to Flashnet. Stable per (project, user, destination). */
+  ref: string
+  destinationChain: string
+  destinationAsset: string
+  destinationAddress: string
+  /** Per-source-chain deposit addresses from Flashnet. */
+  addresses: Record<string, string>
+  /** Address for the requested sourceChain (convenience). */
+  depositAddress: string
+  sourceChain: string
+  enabled: boolean
+  slippageBps?: number
+  feeBps?: number
+  sourceToken?: NestOrchestraSourceToken | null
+  /** Flattened aliases some BFF mappers historically used. */
+  tokenContract?: string | null
+  chainId?: number | null
+  tokenDecimals?: number | null
+}
+
+/** A single standing deposit row from `GET /api/wallet/standing-deposit-address/deposits`. */
+export interface NestStandingDepositDto {
+  depositId: string
+  status: string
+  code?: string | null
+  orderId?: string | null
+  batchId?: string | null
+  amount?: string | null
+  sourceChain?: string | null
+  sourceAsset?: string | null
+  zeroconfOffer?: {
+    id?: string | null
+    status?: string | null
+    expiresAt?: string | null
+    depositSats?: string | null
+    feeSats?: string | null
+    creditSats?: string | null
+  } | null
+  updatedAt?: string | null
+}
+
+export interface NestListStandingDepositsResponse {
+  ok: true
+  deposits: NestStandingDepositDto[]
+  nextOffset: number | null
+}
+
+/** `PATCH /api/wallet/standing-deposit-address` body. */
+export interface NestPatchStandingDepositAddressRequest {
+  userId: string
+  enabled: boolean
+  idempotencyKey?: string
+}
+
+/** `POST /api/wallet/standing-deposit-address/resolve` body. */
+export interface NestResolveStandingDepositsRequest {
+  userId: string
+  /** 1..200 held deposit ids (same address and asset; Bitcoin: exactly one). */
+  depositIds?: string[]
+  /** Alternative to depositIds: refund a whole batch. */
+  batchId?: string
+  refundAddress: string
+  idempotencyKey?: string
+}
+
+export interface NestResolveStandingDepositsResponse {
+  ok: true
+  batchId: string | null
+  status: string
+}
+
+
 /** `POST /api/partner/wallet/lightning-address` response. */
 export interface NestPartnerLightningAddressResponse {
   ok: true
