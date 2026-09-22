@@ -6,6 +6,13 @@ import {
 } from '../../combo'
 import type { NestDepositOptionsResponse } from '../../types/partner'
 
+/** Spark network stamped by nest onto the deposit catalog. */
+export function nestSparkNetwork(
+  payload: NestDepositOptionsResponse | null | undefined,
+): 'MAINNET' | 'REGTEST' {
+  return payload?.sparkNetwork === 'REGTEST' ? 'REGTEST' : 'MAINNET'
+}
+
 /** Map a raw nest deposit-options response to the clean frontend catalog. */
 export function mapNestDepositOptions(
   payload: NestDepositOptionsResponse,

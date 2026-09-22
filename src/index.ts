@@ -89,7 +89,7 @@ export {
   toNestWithdrawBody,
 } from './client/zappi-client'
 /* client mappers (for partners that want raw nest → clean mapping) */
-export { mapNestDepositOptions, lookupDepositNetworkCopy } from './client/mappers/deposit-map'
+export { mapNestDepositOptions, lookupDepositNetworkCopy, nestSparkNetwork } from './client/mappers/deposit-map'
 export {
   mapNestWithdrawOptions,
   mapNestEstimate,
@@ -114,6 +114,8 @@ export {
   toDepositDestination,
   walletDestinationChain,
   flashnetSourceAsset,
+  SPARK_TEST_WALLET_URL,
+  isSparkIdentityAddress,
   type EvmTokenMeta,
 } from './client/presentation/deposit-presentation'
 

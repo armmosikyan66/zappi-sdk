@@ -19,6 +19,25 @@ export function isEvmStableNetwork(
   return isStableNetwork(value) && value !== 'solana' && value !== 'tron'
 }
 
+/** Lightspark hosted Spark web wallet used on REGTEST instead of Cash App / Strike. */
+export const SPARK_TEST_WALLET_URL = 'https://docs.spark.money/tools/test-wallet'
+
+export function isSparkIdentityAddress(address: string): boolean {
+  const value = address.trim().toLowerCase()
+  return (
+    value.startsWith('spark1') ||
+    value.startsWith('sparkrt1') ||
+    value.startsWith('sp1') ||
+    value.startsWith('sprt1')
+  )
+}
+
+function isRegtestSparkNetwork(
+  network?: 'MAINNET' | 'REGTEST' | null,
+): boolean {
+  return network === 'REGTEST'
+}
+
 /**
  * EIP-681 ERC-20 transfer URI. Wallets that scan this send the token, not
  * native ETH. Amount is omitted — standing deposit addresses accept any size.
@@ -47,7 +66,9 @@ export function depositQrPayload(
   address: string,
   _lnurl?: string,
   token?: EvmTokenMeta,
+  _sparkNetwork?: 'MAINNET' | 'REGTEST' | null,
 ): string {
+  if (isSparkIdentityAddress(address)) return address
   if (combo.asset === 'btc' && combo.network === 'mainnet') {
     return `bitcoin:${address}`
   }
@@ -73,8 +94,21 @@ export function depositWalletDeepLinks(
   combo: DepositCombo,
   qrPayload: string,
   _lnurl?: string,
+  sparkNetwork?: 'MAINNET' | 'REGTEST' | null,
 ): WalletDeepLink[] {
   const { asset, network } = combo
+  if (
+    isRegtestSparkNetwork(sparkNetwork) &&
+    !((asset === 'usdc' || asset === 'usdt') && network === 'solana')
+  ) {
+    return [
+      {
+        id: 'spark-test-wallet',
+        label: 'Spark test wallet',
+        uri: SPARK_TEST_WALLET_URL,
+      },
+    ]
+  }
   if (asset === 'btc' && network === 'mainnet') {
     return [
       { id: 'cashapp', label: 'Cash App', uri: qrPayload },
@@ -115,8 +149,9 @@ export function toDepositDestination(
   copy: { feesCopy: string; estimatedArrivalCopy: string },
   lnurl?: string,
   token?: EvmTokenMeta,
+  sparkNetwork?: 'MAINNET' | 'REGTEST' | null,
 ): import('../../types/deposit').DepositDestination {
-  const qrPayload = depositQrPayload(combo, address, lnurl, token)
+  const qrPayload = depositQrPayload(combo, address, lnurl, token, sparkNetwork)
   return {
     asset: combo.asset,
     network: combo.network,
@@ -125,7 +160,7 @@ export function toDepositDestination(
     uriScheme: depositUriScheme(combo),
     feesCopy: copy.feesCopy,
     estimatedArrivalCopy: copy.estimatedArrivalCopy,
-    walletDeepLinks: depositWalletDeepLinks(combo, qrPayload, lnurl),
+    walletDeepLinks: depositWalletDeepLinks(combo, qrPayload, lnurl, sparkNetwork),
     ...(token?.tokenContract ? { tokenContract: token.tokenContract } : {}),
     ...(token?.chainId != null ? { chainId: token.chainId } : {}),
     ...(token?.tokenDecimals != null ? { tokenDecimals: token.tokenDecimals } : {}),

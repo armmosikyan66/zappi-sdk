@@ -24,6 +24,7 @@ export interface NestDepositAssetOption {
 
 export interface NestDepositOptionsResponse {
   ok: true
+  sparkNetwork?: 'MAINNET' | 'REGTEST'
   options: NestDepositAssetOption[]
 }
 

@@ -46,7 +46,7 @@ import type {
   NestWithdrawStatusResponse,
   NestWithdrawalOptionsResponse,
 } from '../types/partner'
-import { lookupDepositNetworkCopy, mapNestDepositOptions } from './mappers/deposit-map'
+import { lookupDepositNetworkCopy, mapNestDepositOptions, nestSparkNetwork } from './mappers/deposit-map'
 import {
   mapNestEstimate,
   mapNestWithdrawOptions,
@@ -314,14 +314,18 @@ export class ZappiClient {
     const userId = opts.userId.trim()
     const nativeReference = opts.nativeReference?.trim() || userId
 
-    const optionsPromise = this.getDepositOptions(signal)
+    const catalogPromise = this.call<NestDepositOptionsResponse>(
+      'wallet/deposit-options',
+      { signal },
+    )
     const createdPromise = this.resolvePartnerDepositAddress(
       combo,
       { userId, nativeReference, recipientSparkAddress: opts.recipientSparkAddress },
       signal,
     )
-    const [options, created] = await Promise.all([optionsPromise, createdPromise])
+    const [catalog, created] = await Promise.all([catalogPromise, createdPromise])
 
+    const options = mapNestDepositOptions(catalog)
     const copy = lookupDepositNetworkCopy(options, combo.asset, combo.network)
     if (!copy) {
       throw new ZappiApiError(400, 'Bad Request', {
@@ -337,6 +341,7 @@ export class ZappiClient {
       copy,
       created.lnurl,
       created.token,
+      nestSparkNetwork(catalog),
     )
   }
 

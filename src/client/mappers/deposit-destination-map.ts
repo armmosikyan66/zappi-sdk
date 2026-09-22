@@ -18,6 +18,7 @@ type NestDestinationPayload = Partial<NestAccumulationAddressResponse> & {
   estimatedArrivalCopy?: string
   lnurl?: string
   sourceToken?: NestOrchestraSourceToken | null
+  sparkNetwork?: 'MAINNET' | 'REGTEST'
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -61,7 +62,7 @@ export function mapNestDepositDestination(
 
   const token = nestSourceTokenMeta(data)
 
-  const qrPayload = depositQrPayload(combo as DepositCombo, address, data.lnurl, token)
+  const qrPayload = depositQrPayload(combo as DepositCombo, address, data.lnurl, token, data.sparkNetwork)
   const copy = {
     feesCopy: data.feesCopy ?? '',
     estimatedArrivalCopy: data.estimatedArrivalCopy ?? '',
@@ -75,7 +76,12 @@ export function mapNestDepositDestination(
     uriScheme: depositUriScheme(combo as DepositCombo),
     feesCopy: copy.feesCopy,
     estimatedArrivalCopy: copy.estimatedArrivalCopy,
-    walletDeepLinks: depositWalletDeepLinks(combo as DepositCombo, qrPayload, data.lnurl),
+    walletDeepLinks: depositWalletDeepLinks(
+      combo as DepositCombo,
+      qrPayload,
+      data.lnurl,
+      data.sparkNetwork,
+    ),
     ...(token.tokenContract ? { tokenContract: token.tokenContract } : {}),
     ...(token.chainId != null ? { chainId: token.chainId } : {}),
     ...(token.tokenDecimals != null ? { tokenDecimals: token.tokenDecimals } : {}),
