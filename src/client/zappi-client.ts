@@ -46,6 +46,42 @@ import type {
   NestWithdrawStatusResponse,
   NestWithdrawalOptionsResponse,
 } from '../types/partner'
+import type {
+  AgentPot,
+  AgentPotSpendApproval,
+  AgentPotSpendRequest,
+  NestAgentPotDepositAddressBody,
+  NestApprovePotAttachBody,
+  NestCreatePotAttachBody,
+  NestCreatePotBody,
+  NestCreatePotGrantBody,
+  NestCreatePotSpendApprovalBody,
+  NestCreatePotSpendRequestBody,
+  NestListPotsQuery,
+  NestListPotsResponse,
+  NestListPotGrantsResponse,
+  NestListPotSpendApprovalsResponse,
+  NestListPotSpendRequestsResponse,
+  NestPotAttachApprovedResponse,
+  NestPotAttachPendingResponse,
+  NestPotAttachPollResponse,
+  NestPotBalanceResponse,
+  NestPotDepositAddressResponse,
+  NestPotSpendGateResponse,
+  PotSpendAction,
+} from '../types/pots'
+import type {
+  NestListTransactionsResponse,
+  NestTransactionDetailResponse,
+} from '../types/ledger'
+import type {
+  NestEstimateSendResponse,
+  NestResolveSendTargetResponse,
+  NestSendExternalBody,
+  NestSendOptionsResponse,
+  NestSendStatusResponse,
+  NestValidateSendAddressResponse,
+} from '../types/send'
 import { lookupDepositNetworkCopy, mapNestDepositOptions, nestSparkNetwork } from './mappers/deposit-map'
 import {
   mapNestEstimate,
@@ -636,6 +672,308 @@ export class ZappiClient {
     })
   }
 
+  /* --------------------------------- Pots ---------------------------------- */
+
+  /** `GET /api/wallet/pots?origin=&spendMode=` → list the current user's pots. */
+  async listPots(
+    query: NestListPotsQuery = {},
+    signal?: AbortSignal,
+  ): Promise<AgentPot[]> {
+    const params = new URLSearchParams()
+    if (query.origin) params.set('origin', query.origin)
+    if (query.spendMode) params.set('spendMode', query.spendMode)
+    const qs = params.toString()
+    const res = await this.call<NestListPotsResponse>(
+      qs ? `wallet/pots?${qs}` : 'wallet/pots',
+      { signal },
+    )
+    return res.pots ?? []
+  }
+
+  /** `POST /api/wallet/pots` — register an agent pot by public Spark address. */
+  async createPot(
+    body: NestCreatePotBody,
+    signal?: AbortSignal,
+  ): Promise<AgentPot> {
+    return this.call<AgentPot>('wallet/pots', { method: 'POST', body, signal })
+  }
+
+  /** `PATCH /api/wallet/pots/:id` — claim a legacy pot as user-held. */
+  async claimPotOrigin(
+    id: string,
+    body: Record<string, unknown> = {},
+    signal?: AbortSignal,
+  ): Promise<AgentPot> {
+    return this.call<AgentPot>(`wallet/pots/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body,
+      signal,
+    })
+  }
+
+  /** `POST /api/wallet/pots/:id/deposit-address` — Orchestra deposit address crediting the pot. */
+  async createPotDepositAddress(
+    id: string,
+    body: Record<string, unknown> = {},
+    signal?: AbortSignal,
+  ): Promise<NestPotDepositAddressResponse> {
+    return this.call<NestPotDepositAddressResponse>(
+      `wallet/pots/${encodeURIComponent(id)}/deposit-address`,
+      { method: 'POST', body, signal },
+    )
+  }
+
+  /** `GET /api/wallet/pots/:id/balance` — read pot Spark USDB via SparkReadonly. */
+  async getPotBalance(
+    id: string,
+    signal?: AbortSignal,
+  ): Promise<NestPotBalanceResponse> {
+    return this.call<NestPotBalanceResponse>(
+      `wallet/pots/${encodeURIComponent(id)}/balance`,
+      { signal },
+    )
+  }
+
+  /** `GET /api/wallet/pots/:id/grants` — list grants on a pot. */
+  async listPotGrants(
+    id: string,
+    signal?: AbortSignal,
+  ): Promise<NestListPotGrantsResponse['grants']> {
+    const res = await this.call<NestListPotGrantsResponse>(
+      `wallet/pots/${encodeURIComponent(id)}/grants`,
+      { signal },
+    )
+    return res.grants ?? []
+  }
+
+  /** `POST /api/wallet/pots/:id/grants` — create a pot grant. */
+  async createPotGrant(
+    id: string,
+    body: NestCreatePotGrantBody,
+    signal?: AbortSignal,
+  ): Promise<import('../types/pots').AgentPotGrant> {
+    return this.call(`wallet/pots/${encodeURIComponent(id)}/grants`, {
+      method: 'POST',
+      body,
+      signal,
+    })
+  }
+
+  /** `DELETE /api/wallet/pots/:id/grants/:grantId` — revoke a grant (idempotent 204). */
+  async revokePotGrant(
+    id: string,
+    grantId: string,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    await this.call<void>(
+      `wallet/pots/${encodeURIComponent(id)}/grants/${encodeURIComponent(grantId)}`,
+      { method: 'DELETE', signal },
+    )
+  }
+
+  /** `GET /api/wallet/pots/:id/spend-approvals` — list money-out approvals. */
+  async listPotSpendApprovals(
+    id: string,
+    signal?: AbortSignal,
+  ): Promise<AgentPotSpendApproval[]> {
+    const res = await this.call<NestListPotSpendApprovalsResponse>(
+      `wallet/pots/${encodeURIComponent(id)}/spend-approvals`,
+      { signal },
+    )
+    return res.approvals ?? []
+  }
+
+  /** `POST /api/wallet/pots/:id/spend-approvals` — queue a money-out approval. */
+  async createPotSpendApproval(
+    id: string,
+    body: NestCreatePotSpendApprovalBody,
+    signal?: AbortSignal,
+  ): Promise<AgentPotSpendApproval> {
+    return this.call<AgentPotSpendApproval>(
+      `wallet/pots/${encodeURIComponent(id)}/spend-approvals`,
+      { method: 'POST', body, signal },
+    )
+  }
+
+  /** `GET /api/wallet/pots/:id/spend-gate?action=` — check whether nest gates money-out. */
+  async getPotSpendGate(
+    id: string,
+    action?: PotSpendAction,
+    signal?: AbortSignal,
+  ): Promise<NestPotSpendGateResponse> {
+    const qs = action ? `?action=${encodeURIComponent(action)}` : ''
+    return this.call<NestPotSpendGateResponse>(
+      `wallet/pots/${encodeURIComponent(id)}/spend-gate${qs}`,
+      { signal },
+    )
+  }
+
+  /** `POST /api/wallet/pots/:id/spend-approvals/:approvalId/approve` — passkey step-up approve. */
+  async approvePotSpend(
+    id: string,
+    approvalId: string,
+    authorizationToken?: string | null,
+    signal?: AbortSignal,
+  ): Promise<AgentPotSpendApproval> {
+    return this.call<AgentPotSpendApproval>(
+      `wallet/pots/${encodeURIComponent(id)}/spend-approvals/${encodeURIComponent(approvalId)}/approve`,
+      { method: 'POST', authorizationToken, signal },
+    )
+  }
+
+  /** `POST /api/wallet/pots/:id/spend-approvals/:approvalId/reject` — reject a queued money-out. */
+  async rejectPotSpend(
+    id: string,
+    approvalId: string,
+    signal?: AbortSignal,
+  ): Promise<AgentPotSpendApproval> {
+    return this.call<AgentPotSpendApproval>(
+      `wallet/pots/${encodeURIComponent(id)}/spend-approvals/${encodeURIComponent(approvalId)}/reject`,
+      { method: 'POST', signal },
+    )
+  }
+
+  /** `POST /api/wallet/pots/:id/spend-approvals/:approvalId/consume` — mark approved money-out consumed. */
+  async consumePotSpend(
+    id: string,
+    approvalId: string,
+    signal?: AbortSignal,
+  ): Promise<AgentPotSpendApproval> {
+    return this.call<AgentPotSpendApproval>(
+      `wallet/pots/${encodeURIComponent(id)}/spend-approvals/${encodeURIComponent(approvalId)}/consume`,
+      { method: 'POST', signal },
+    )
+  }
+
+  /* --------------------------- agent grant routes -------------------------- */
+
+  /** `GET /api/wallet/pots/:id/agent/balance?grantId=` — agent-scoped pot balance. */
+  async getPotBalanceByGrant(
+    id: string,
+    grantId: string,
+    signal?: AbortSignal,
+  ): Promise<NestPotBalanceResponse> {
+    return this.call<NestPotBalanceResponse>(
+      `wallet/pots/${encodeURIComponent(id)}/agent/balance?grantId=${encodeURIComponent(grantId)}`,
+      { signal },
+    )
+  }
+
+  /** `POST /api/wallet/pots/:id/agent/deposit-address` — agent-scoped deposit address. */
+  async createPotDepositAddressByGrant(
+    id: string,
+    body: NestAgentPotDepositAddressBody,
+    signal?: AbortSignal,
+  ): Promise<NestPotDepositAddressResponse> {
+    return this.call<NestPotDepositAddressResponse>(
+      `wallet/pots/${encodeURIComponent(id)}/agent/deposit-address`,
+      { method: 'POST', body, signal },
+    )
+  }
+
+  /* ------------------------------ attach flow ------------------------------ */
+
+  /** `POST /api/wallet/pots/attach` — create a pending pot attach (device-code P1). */
+  async createPotAttach(
+    body: NestCreatePotAttachBody,
+    signal?: AbortSignal,
+  ): Promise<NestPotAttachPendingResponse> {
+    return this.call<NestPotAttachPendingResponse>('wallet/pots/attach', {
+      method: 'POST',
+      body,
+      signal,
+    })
+  }
+
+  /** `GET /api/wallet/pots/attach/:requestId` — poll a pending pot attach. */
+  async pollPotAttach(
+    requestId: string,
+    signal?: AbortSignal,
+  ): Promise<NestPotAttachPollResponse> {
+    return this.call<NestPotAttachPollResponse>(
+      `wallet/pots/attach/${encodeURIComponent(requestId)}`,
+      { signal },
+    )
+  }
+
+  /** `POST /api/wallet/pots/attach/:requestId/approve` — signed-in user binds the pot. */
+  async approvePotAttach(
+    requestId: string,
+    body: NestApprovePotAttachBody,
+    signal?: AbortSignal,
+  ): Promise<NestPotAttachApprovedResponse> {
+    return this.call<NestPotAttachApprovedResponse>(
+      `wallet/pots/attach/${encodeURIComponent(requestId)}/approve`,
+      { method: 'POST', body, signal },
+    )
+  }
+
+  /* ----------------------------- spend tickets ----------------------------- */
+
+  /** `POST /api/wallet/self-custody/pots/:potId/spend-requests` — create an auth-required pot spend ticket. */
+  async createPotSpendRequest(
+    potId: string,
+    body: NestCreatePotSpendRequestBody,
+    authorizationToken?: string | null,
+    signal?: AbortSignal,
+  ): Promise<AgentPotSpendRequest> {
+    return this.call<AgentPotSpendRequest>(
+      `wallet/self-custody/pots/${encodeURIComponent(potId)}/spend-requests`,
+      { method: 'POST', body, authorizationToken, signal },
+    )
+  }
+
+  /** `GET /api/wallet/self-custody/pots/:potId/spend-requests` — list spend tickets for the owner. */
+  async listPotSpendRequests(
+    potId: string,
+    signal?: AbortSignal,
+  ): Promise<AgentPotSpendRequest[]> {
+    const res = await this.call<NestListPotSpendRequestsResponse>(
+      `wallet/self-custody/pots/${encodeURIComponent(potId)}/spend-requests`,
+      { signal },
+    )
+    return res.requests ?? []
+  }
+
+  /** `GET /api/wallet/self-custody/pots/:potId/spend-requests/:requestId` — get a spend ticket. */
+  async getPotSpendRequest(
+    potId: string,
+    requestId: string,
+    authorizationToken?: string | null,
+    signal?: AbortSignal,
+  ): Promise<AgentPotSpendRequest> {
+    return this.call<AgentPotSpendRequest>(
+      `wallet/self-custody/pots/${encodeURIComponent(potId)}/spend-requests/${encodeURIComponent(requestId)}`,
+      { authorizationToken, signal },
+    )
+  }
+
+  /** `POST /api/wallet/self-custody/pots/:potId/spend-requests/:requestId/approve` — human approve. */
+  async approvePotSpendRequest(
+    potId: string,
+    requestId: string,
+    authorizationToken?: string | null,
+    signal?: AbortSignal,
+  ): Promise<AgentPotSpendRequest> {
+    return this.call<AgentPotSpendRequest>(
+      `wallet/self-custody/pots/${encodeURIComponent(potId)}/spend-requests/${encodeURIComponent(requestId)}/approve`,
+      { method: 'POST', authorizationToken, signal },
+    )
+  }
+
+  /** `POST /api/wallet/self-custody/pots/:potId/spend-requests/:requestId/deny` — human deny. */
+  async denyPotSpendRequest(
+    potId: string,
+    requestId: string,
+    authorizationToken?: string | null,
+    signal?: AbortSignal,
+  ): Promise<AgentPotSpendRequest> {
+    return this.call<AgentPotSpendRequest>(
+      `wallet/self-custody/pots/${encodeURIComponent(potId)}/spend-requests/${encodeURIComponent(requestId)}/deny`,
+      { method: 'POST', authorizationToken, signal },
+    )
+  }
+
   /* -------------------------------- Transfer -------------------------------- */
 
   /** `POST /api/wallet/send/internal` — user-to-user internal send. */
@@ -649,6 +987,105 @@ export class ZappiClient {
       authorizationToken: input.authorizationToken,
       signal,
     })
+  }
+
+  /* --------------------------------- Ledger -------------------------------- */
+
+  /** `GET /api/wallet/transactions` — deposit ledger activity for the current user. */
+  async listTransactions(
+    signal?: AbortSignal,
+  ): Promise<NestListTransactionsResponse['transactions']> {
+    const res = await this.call<NestListTransactionsResponse>(
+      'wallet/transactions',
+      { signal },
+    )
+    return res.transactions ?? []
+  }
+
+  /** `GET /api/wallet/transactions/:id` — transaction receipt with Orchestra detail. */
+  async getTransaction(
+    id: string,
+    signal?: AbortSignal,
+  ): Promise<NestTransactionDetailResponse['transaction']> {
+    const res = await this.call<NestTransactionDetailResponse>(
+      `wallet/transactions/${encodeURIComponent(id)}`,
+      { signal },
+    )
+    return res.transaction
+  }
+
+  /* ------------------------- Send (user-facing) --------------------------- */
+
+  /** `GET /api/wallet/send/resolve?recipientUserId=` — resolve a Zappi contact send target. */
+  async resolveSendTarget(
+    recipientUserId: string,
+    signal?: AbortSignal,
+  ): Promise<NestResolveSendTargetResponse> {
+    return this.call<NestResolveSendTargetResponse>(
+      `wallet/send/resolve?recipientUserId=${encodeURIComponent(recipientUserId)}`,
+      { signal },
+    )
+  }
+
+  /** `POST /api/wallet/send/external` — withdraw Spark USDB to an on-chain address (session route). */
+  async sendExternal(
+    body: NestSendExternalBody,
+    authorizationToken?: string | null,
+    signal?: AbortSignal,
+  ): Promise<NestWithdrawExecuteResponse> {
+    return this.call<NestWithdrawExecuteResponse>('wallet/send/external', {
+      method: 'POST',
+      body,
+      authorizationToken,
+      signal,
+    })
+  }
+
+  /** `GET /api/wallet/send/options` — send catalog (same as withdrawal options). */
+  async getSendOptions(
+    signal?: AbortSignal,
+  ): Promise<NestSendOptionsResponse> {
+    return this.call<NestSendOptionsResponse>('wallet/send/options', { signal })
+  }
+
+  /** `GET /api/wallet/send/validate-address?asset=&network=&address=` — validate a send destination. */
+  async validateSendAddress(
+    query: { asset: string; network: string; address: string },
+    signal?: AbortSignal,
+  ): Promise<NestValidateSendAddressResponse> {
+    const qs = `?asset=${encodeURIComponent(query.asset)}&network=${encodeURIComponent(query.network)}&address=${encodeURIComponent(query.address)}`
+    return this.call<NestValidateSendAddressResponse>(
+      `wallet/send/validate-address${qs}`,
+      { signal },
+    )
+  }
+
+  /** `GET /api/wallet/send/estimate?asset=&networkId=&amountCents=&address=` — stateless send estimate. */
+  async estimateSend(
+    query: { asset: string; networkId: string; amountCents: number; address?: string },
+    signal?: AbortSignal,
+  ): Promise<NestEstimateSendResponse> {
+    const params = new URLSearchParams({
+      asset: query.asset,
+      networkId: query.networkId,
+      amountCents: String(query.amountCents),
+    })
+    if (query.address) params.set('address', query.address)
+    return this.call<NestEstimateSendResponse>(
+      `wallet/send/estimate?${params.toString()}`,
+      { signal },
+    )
+  }
+
+  /** `GET /api/wallet/send/status?withdrawId=` — poll an external-address send. */
+  async getSendStatus(
+    withdrawId: string,
+    signal?: AbortSignal,
+  ): Promise<NestSendStatusResponse> {
+    return this.call<NestSendStatusResponse>(
+      `wallet/send/status?withdrawId=${encodeURIComponent(withdrawId)}`,
+      { signal },
+    )
   }
 
   /* --------------------------- Generic passthrough -------------------------- */

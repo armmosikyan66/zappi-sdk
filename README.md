@@ -168,6 +168,51 @@ function Picker() {
 Pass a **`bff`-kind client** to the provider in the browser. Server
 (`projectKey`/`session`) clients are for your BFF/node code only.
 
+## Pots, ledger & send
+
+`ZappiClient` also wraps the user-session pot, attach, spend-ticket, ledger, and send routes on zappi-nest. These are server-side calls (project key or user session) — never browser-side.
+
+```ts
+// Pots (user session)
+const pots = await client.listPots({ spendMode: 'free' })
+const pot = await client.createPot({ sparkAddress, spendMode: 'free' })
+const balance = await client.getPotBalance(potId)
+const grants = await client.listPotGrants(potId)
+await client.createPotGrant(potId, { scopes: ['read', 'deposit'] })
+await client.revokePotGrant(potId, grantId)
+const gate = await client.getPotSpendGate(potId, 'withdraw')
+await client.approvePotSpend(potId, approvalId, authorizationToken)
+
+// Agent grant (no user JWT — the grant is the credential)
+await client.getPotBalanceByGrant(potId, grantId)
+await client.createPotDepositAddressByGrant(potId, { grantId })
+
+// Device-code attach
+const pending = await client.createPotAttach({ spendMode: 'free' })
+const poll = await client.pollPotAttach(pending.requestId)
+await client.approvePotAttach(pending.requestId, { spendMode: 'free' })
+
+// Auth-required spend tickets
+await client.createPotSpendRequest(potId, { amountCents, destinationAddress }, authorizationToken)
+const requests = await client.listPotSpendRequests(potId)
+await client.approvePotSpendRequest(potId, requestId, authorizationToken)
+await client.denyPotSpendRequest(potId, requestId, authorizationToken)
+
+// Ledger
+const txs = await client.listTransactions()
+const receipt = await client.getTransaction(txId)
+
+// Send (user-facing)
+const target = await client.resolveSendTarget(recipientUserId)
+await client.sendExternal({ asset, networkId, address, amountCents }, authorizationToken)
+const estimate = await client.estimateSend({ asset, networkId, amountCents, address })
+const status = await client.getSendStatus(withdrawId)
+```
+
+The raw DTO shapes for these routes live in `@zappi/sdk` types: `AgentPot`,
+`AgentPotSpendApproval`, `NestPotAttachPendingResponse`, `LedgerTransaction`,
+`NestResolveSendTargetResponse`, etc.
+
 ## Custody model
 
 The library never holds mnemonics. The `/sign` subpath takes the mnemonic via
