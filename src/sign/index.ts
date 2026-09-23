@@ -8,8 +8,10 @@ import {
   acquireHeldWallet,
   releaseHeldWallet,
   subscribeHeldWallet,
+  subscribeHeldWalletTransfers,
   type NormalizedWalletSession,
   type WalletTokenBalances,
+  type WalletTransferEvent,
 } from './wallet-session'
 
 /**
@@ -127,6 +129,27 @@ export async function subscribeWalletTokenBalances(
   }
 }
 
+/**
+ * Live incoming transfer claims for a seed this process holds. Fires on
+ * `transfer:claimed` (incoming Spark-to-Spark only). Cold addresses (no
+ * mnemonic) cannot use this — reconcile those via transfer list polling.
+ */
+export async function subscribeWalletTransfers(
+  opts: CreateWalletSignerOptions,
+  listener: (event: WalletTransferEvent) => void,
+): Promise<() => Promise<void>> {
+  const session = normalizeWalletSession(opts)
+  try {
+    return await subscribeHeldWalletTransfers(session, listener)
+  } catch (error) {
+    if (error instanceof WalletSignerError) throw error
+    throw new WalletSignerError(
+      'INIT_FAILED',
+      `Wallet initialization failed: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
+}
+
 /** Run `fn` against the shared wallet, then release this hold. */
 export async function withHeldSparkWallet<T>(
   opts: CreateWalletSignerOptions,
@@ -191,4 +214,8 @@ export const createSparkSigner = createWalletSigner
 export const SparkSignerError = WalletSignerError
 
 export type { WalletSigner, CreateWalletSignerOptions }
-export type { WalletTokenBalances, WalletTokenBalanceAmounts } from './wallet-session'
+export type {
+  WalletTokenBalances,
+  WalletTokenBalanceAmounts,
+  WalletTransferEvent,
+} from './wallet-session'
