@@ -1,9 +1,16 @@
-import { SparkWallet, type Bech32mTokenIdentifier } from '@buildonspark/spark-sdk'
+import type { Bech32mTokenIdentifier } from '@buildonspark/spark-sdk'
 import { DEFAULT_WALLET_NETWORK } from '../constants'
 import type {
   CreateWalletSignerOptions,
   WalletSigner,
 } from './wallet-signer-port'
+import {
+  acquireHeldWallet,
+  releaseHeldWallet,
+  subscribeHeldWallet,
+  type NormalizedWalletSession,
+  type WalletTokenBalances,
+} from './wallet-session'
 
 /**
  * In-process Zappi wallet USDB signer (Spark is the underlying rail). Ports
@@ -34,30 +41,12 @@ import type {
 export async function createWalletSigner(
   opts: CreateWalletSignerOptions,
 ): Promise<WalletSigner> {
-  const mnemonic = opts.mnemonic?.trim()
-  if (!mnemonic) {
-    throw new WalletSignerError('MNEMONIC_REQUIRED', 'mnemonic is required')
-  }
+  const session = normalizeWalletSession(opts)
+  let closed = false
 
-  const accountNumber = opts.accountNumber ?? 0
-  if (!Number.isInteger(accountNumber) || accountNumber < 0) {
-    throw new WalletSignerError('INVALID_ACCOUNT', 'accountNumber must be an integer >= 0')
-  }
-
-  const network = (opts.network ?? DEFAULT_WALLET_NETWORK).toUpperCase() === 'REGTEST'
-    ? 'REGTEST'
-    : 'MAINNET'
-
-  let wallet: SparkWallet | null = null
-  let cleanupFns: Array<() => Promise<void>> = []
-
+  let wallet
   try {
-    const initialized = await SparkWallet.initialize({
-      mnemonicOrSeed: mnemonic,
-      accountNumber,
-      options: { network },
-    })
-    wallet = initialized.wallet
+    wallet = await acquireHeldWallet(session)
   } catch (error) {
     throw new WalletSignerError(
       'INIT_FAILED',
@@ -67,7 +56,7 @@ export async function createWalletSigner(
 
   const signer: WalletSigner = {
     async transferUsdb({ tokenIdentifier, tokenAmount, receiverSparkAddress }) {
-      if (!wallet) {
+      if (closed) {
         throw new WalletSignerError('CLEANED_UP', 'Signer has been cleaned up')
       }
       const ti = tokenIdentifier?.trim()
@@ -105,26 +94,74 @@ export async function createWalletSigner(
     },
 
     async cleanup() {
-      const w = wallet
-      wallet = null
-      if (w && typeof w.cleanup === 'function') {
-        try {
-          await w.cleanup()
-        } catch {
-          // Best-effort cleanup; never throw.
-        }
+      if (closed) return
+      closed = true
+      try {
+        await releaseHeldWallet(session)
+      } catch {
+        // Best-effort cleanup; never throw.
       }
-      for (const fn of cleanupFns) {
-        try {
-          await fn()
-        } catch {
-          // ignore
-        }
-      }
-      cleanupFns = []
     },
   }
   return signer
+}
+
+/**
+ * Live token balances for a seed this process holds. Cold addresses (no
+ * mnemonic) cannot use this — read them with `ZappiClient.getWalletBalance`
+ * or `getPotBalance`, and refresh those from `subscribeCashierEvents`.
+ */
+export async function subscribeWalletTokenBalances(
+  opts: CreateWalletSignerOptions,
+  listener: (balances: WalletTokenBalances) => void,
+): Promise<() => Promise<void>> {
+  const session = normalizeWalletSession(opts)
+  try {
+    return await subscribeHeldWallet(session, listener)
+  } catch (error) {
+    if (error instanceof WalletSignerError) throw error
+    throw new WalletSignerError(
+      'INIT_FAILED',
+      `Wallet initialization failed: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
+}
+
+/** Run `fn` against the shared wallet, then release this hold. */
+export async function withHeldSparkWallet<T>(
+  opts: CreateWalletSignerOptions,
+  fn: (wallet: Awaited<ReturnType<typeof acquireHeldWallet>>) => Promise<T>,
+): Promise<T> {
+  const session = normalizeWalletSession(opts)
+  let wallet: Awaited<ReturnType<typeof acquireHeldWallet>>
+  try {
+    wallet = await acquireHeldWallet(session)
+  } catch (error) {
+    throw new WalletSignerError(
+      'INIT_FAILED',
+      `Wallet initialization failed: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
+  try {
+    return await fn(wallet)
+  } finally {
+    await releaseHeldWallet(session)
+  }
+}
+
+function normalizeWalletSession(opts: CreateWalletSignerOptions): NormalizedWalletSession {
+  const mnemonic = opts.mnemonic?.trim()
+  if (!mnemonic) {
+    throw new WalletSignerError('MNEMONIC_REQUIRED', 'mnemonic is required')
+  }
+  const accountNumber = opts.accountNumber ?? 0
+  if (!Number.isInteger(accountNumber) || accountNumber < 0) {
+    throw new WalletSignerError('INVALID_ACCOUNT', 'accountNumber must be an integer >= 0')
+  }
+  const network = (opts.network ?? DEFAULT_WALLET_NETWORK).toUpperCase() === 'REGTEST'
+    ? 'REGTEST'
+    : 'MAINNET'
+  return { mnemonic, accountNumber, network }
 }
 
 /** Error thrown by the Zappi wallet signer. */
@@ -154,3 +191,4 @@ export const createSparkSigner = createWalletSigner
 export const SparkSignerError = WalletSignerError
 
 export type { WalletSigner, CreateWalletSignerOptions }
+export type { WalletTokenBalances, WalletTokenBalanceAmounts } from './wallet-session'
