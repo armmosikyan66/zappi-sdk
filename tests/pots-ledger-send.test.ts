@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ZappiClient } from '../src/client/zappi-client'
 
-type Captured = { method: string; url: string; body: unknown }
+type Captured = { method: string; url: string; body: unknown; headers: Headers }
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -22,7 +22,8 @@ function clientWith(handler: (req: Captured) => Response): {
       const url = String(input)
       const method = init?.method ?? 'GET'
       const body = typeof init?.body === 'string' ? JSON.parse(init.body) : undefined
-      const req: Captured = { method, url, body }
+      const headers = new Headers(init?.headers)
+      const req: Captured = { method, url, body, headers }
       calls.push(req)
       return handler(req)
     }) as typeof fetch,
@@ -194,6 +195,33 @@ describe('attach flow', () => {
     )
     await client.pollPotAttach('r1')
     expect(calls[0]!.url).toBe('http://nest.test/api/wallet/pots/attach/r1')
+  })
+
+
+  it('reclaimPotAttachCredentials POSTs credentials with X-Zappi-Device-Code', async () => {
+    const { client, calls } = clientWith(() =>
+      jsonResponse({
+        status: 'approved',
+        requestId: 'r1',
+        potId: 'p1',
+        grantId: 'g1',
+        potClientToken: 'zpc_secret',
+      }),
+    )
+    const res = await client.reclaimPotAttachCredentials('r1', 'device_secret')
+    expect(calls[0]!.method).toBe('POST')
+    expect(calls[0]!.url).toBe('http://nest.test/api/wallet/pots/attach/r1/credentials')
+    expect(calls[0]!.headers.get('X-Zappi-Device-Code')).toBe('device_secret')
+    expect(res.potClientToken).toBe('zpc_secret')
+  })
+
+  it('pollPotAttach does not require potClientToken on approved public status', async () => {
+    const { client } = clientWith(() =>
+      jsonResponse({ status: 'approved', requestId: 'r1', potId: 'p1', grantId: 'g1' }),
+    )
+    const res = await client.pollPotAttach('r1')
+    expect(res.status).toBe('approved')
+    expect(res.potClientToken).toBeUndefined()
   })
 
   it('approvePotAttach POSTs approve', async () => {
