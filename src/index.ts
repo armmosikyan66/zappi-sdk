@@ -25,6 +25,9 @@ export {
   QUOTE_TOKEN_VERSION,
   FALLBACK_ARRIVAL,
   withdrawArrivalCopy,
+  ZAPPI_DEVICE_CODE_HEADER,
+  POT_ATTACH_RECLAIM_METHOD,
+  potAttachReclaimPath,
 } from './constants'
 
 /* --------------------------------- amounts -------------------------------- */

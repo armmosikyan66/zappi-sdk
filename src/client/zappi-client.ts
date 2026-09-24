@@ -63,6 +63,7 @@ import type {
   NestListPotSpendApprovalsResponse,
   NestListPotSpendRequestsResponse,
   NestPotAttachApprovedResponse,
+  NestPotAttachCredentialsResponse,
   NestPotAttachPendingResponse,
   NestPotAttachPollResponse,
   NestPotBalanceResponse,
@@ -102,6 +103,11 @@ import {
   toDepositDestination,
 } from './presentation/deposit-presentation'
 import type { DepositCombo } from '../types/cashier'
+import {
+  POT_ATTACH_RECLAIM_METHOD,
+  ZAPPI_DEVICE_CODE_HEADER,
+  potAttachReclaimPath,
+} from '../constants'
 
 /**
  * Authentication mode for a {@link ZappiClient} call.
@@ -163,6 +169,11 @@ interface CallOptions {
   body?: unknown
   /** One-time passkey step-up token (`X-Zappi-Authorization`). */
   authorizationToken?: string | null
+  /**
+   * Attach deviceCode for agent reclaim (`X-Zappi-Device-Code`).
+   * Never log or put in URLs.
+   */
+  deviceCode?: string | null
   /** Per-request signal. */
   signal?: AbortSignal
   /** Override auth for this single call. */
@@ -885,7 +896,10 @@ export class ZappiClient {
     })
   }
 
-  /** `GET /api/wallet/pots/attach/:requestId` — poll a pending pot attach. */
+  /**
+   * `GET /api/wallet/pots/attach/:requestId` — public status poll.
+   * Never expect potClientToken here (1-203); use {@link reclaimPotAttachCredentials}.
+   */
   async pollPotAttach(
     requestId: string,
     signal?: AbortSignal,
@@ -894,6 +908,25 @@ export class ZappiClient {
       `wallet/pots/attach/${encodeURIComponent(requestId)}`,
       { signal },
     )
+  }
+
+  /**
+   * Agent reclaim of private pairing creds (1-203).
+   * `POST …/pots/attach/:requestId/credentials` with `X-Zappi-Device-Code`.
+   * Path/method centralized in {@link potAttachReclaimPath} /
+   * {@link POT_ATTACH_RECLAIM_METHOD} so a Nest rename is one line.
+   * Never log `deviceCode` or `potClientToken`.
+   */
+  async reclaimPotAttachCredentials(
+    requestId: string,
+    deviceCode: string,
+    signal?: AbortSignal,
+  ): Promise<NestPotAttachCredentialsResponse> {
+    return this.call<NestPotAttachCredentialsResponse>(potAttachReclaimPath(requestId), {
+      method: POT_ATTACH_RECLAIM_METHOD,
+      deviceCode,
+      signal,
+    })
   }
 
   /** `POST /api/wallet/pots/attach/:requestId/approve` — signed-in user binds the pot. */
@@ -1107,6 +1140,7 @@ export class ZappiClient {
       method?: 'GET' | 'POST' | 'DELETE' | 'PATCH'
       body?: unknown
       authorizationToken?: string | null
+      deviceCode?: string | null
       signal?: AbortSignal
       auth?: ZappiAuth
     } = {},
@@ -1182,7 +1216,11 @@ export class ZappiClient {
 
   /* -------------------------------- internals ------------------------------- */
 
-  private buildHeaders(auth: ZappiAuth, authorizationToken?: string | null): Headers {
+  private buildHeaders(
+    auth: ZappiAuth,
+    authorizationToken?: string | null,
+    deviceCode?: string | null,
+  ): Headers {
     const headers = new Headers()
     headers.set('Accept', 'application/json')
 
@@ -1200,6 +1238,8 @@ export class ZappiClient {
       if (auth.forwardedProto) headers.set('X-Forwarded-Proto', auth.forwardedProto)
     }
     if (authorizationToken) headers.set('X-Zappi-Authorization', authorizationToken)
+    const trimmedDevice = deviceCode?.trim()
+    if (trimmedDevice) headers.set(ZAPPI_DEVICE_CODE_HEADER, trimmedDevice)
     return headers
   }
 
@@ -1215,7 +1255,7 @@ export class ZappiClient {
     }
 
     const method = opts.method ?? 'GET'
-    const headers = this.buildHeaders(auth, opts.authorizationToken)
+    const headers = this.buildHeaders(auth, opts.authorizationToken, opts.deviceCode)
     if (opts.body !== undefined) headers.set('Content-Type', 'application/json')
     const timeoutController = new AbortController()
     const timeout = setTimeout(

@@ -147,6 +147,12 @@ export interface NestAgentPotDepositAddressBody {
 export interface NestPotAttachPendingResponse {
   requestId: string
   userCode: string
+  /**
+   * High-entropy device/polling secret (RFC 8628 device_code). Returned once
+   * on create. Never put in approveUrl. Host secret — send as
+   * {@link import('../constants').ZAPPI_DEVICE_CODE_HEADER} on reclaim.
+   */
+  deviceCode: string
   approveUrl: string
   expiresAt: string
   spendMode?: 'auth_required' | 'free' | null
@@ -161,16 +167,38 @@ export interface NestCreatePotAttachBody {
   label?: string
 }
 
+/**
+ * Public GET `…/pots/attach/:requestId` — status only.
+ * Never includes potClientToken (1-203). Agents reclaim via
+ * {@link NestPotAttachCredentialsResponse}.
+ */
 export interface NestPotAttachPollResponse {
   status: 'pending' | 'approved' | 'denied' | 'expired'
   requestId: string
   userCode?: string
   spendMode?: string | null
   expiresAt?: string
+  label?: string | null
+  agentRef?: string | null
+  sparkAddress?: string | null
   potId?: string | null
   origin?: string | null
   grantId?: string | null
+  /** @deprecated Public poll never returns this (1-203). Prefer reclaim. */
   potClientToken?: string | null
+}
+
+/** Agent reclaim response (`POST …/attach/:requestId/credentials` + deviceCode header). */
+export interface NestPotAttachCredentialsResponse {
+  status: 'pending' | 'approved' | 'denied' | 'expired'
+  requestId: string
+  expiresAt?: string
+  spendMode?: string | null
+  potId?: string | null
+  origin?: string | null
+  grantId?: string | null
+  /** Present only when status=approved and deviceCode is valid. */
+  potClientToken?: string
 }
 
 export interface NestPotAttachApprovedResponse {
@@ -183,10 +211,13 @@ export interface NestPotAttachApprovedResponse {
 
 /** `POST /api/wallet/pots/attach/:requestId/approve` body. */
 export interface NestApprovePotAttachBody {
+  /** Required by Nest 1-203 — must match the attach userCode (distinct from deviceCode). */
+  userCode: string
   spendMode?: 'auth_required' | 'free'
   origin?: 'user' | 'agent'
   sparkAddress?: string
   label?: string
+  agentRef?: string
 }
 
 /* --------------------------- spend tickets ------------------------------- */

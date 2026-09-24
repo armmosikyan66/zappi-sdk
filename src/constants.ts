@@ -37,6 +37,26 @@ export const PRODUCT_WALLET_ACCOUNT_NUMBER = 0
 /** Default Zappi wallet network when none is provided. */
 export const DEFAULT_WALLET_NETWORK: WalletNetwork = 'MAINNET'
 
+
+/* ------------------------ pot attach (1-203 device code) -------------------- */
+
+/**
+ * RFC 8628 device_code header for agent reclaim. Never put deviceCode in URLs
+ * or query strings. Nest constant: DEVICE_CODE_HEADER.
+ */
+export const ZAPPI_DEVICE_CODE_HEADER = 'X-Zappi-Device-Code'
+
+/**
+ * Provisional Nest reclaim path (1-203). Centralized so a Nest rename is one line.
+ * Method: POST. Prefer this over GET-with-header on the public poll URL.
+ */
+export const POT_ATTACH_RECLAIM_METHOD = 'POST' as const
+
+/** Nest path (no `/api/` prefix) for reclaiming potClientToken with deviceCode. */
+export function potAttachReclaimPath(requestId: string): string {
+  return `wallet/pots/attach/${encodeURIComponent(requestId)}/credentials`
+}
+
 /** Default webhook timestamp tolerance (5 minutes), matches nest config. */
 export const DEFAULT_WEBHOOK_TOLERANCE_MS = 300_000
 
