@@ -152,7 +152,7 @@ export interface NestPotAttachPendingResponse {
    * on create. Never put in approveUrl. Host secret — send as
    * {@link import('../constants').ZAPPI_DEVICE_CODE_HEADER} on reclaim.
    */
-  deviceCode?: string
+  deviceCode: string
   approveUrl: string
   expiresAt: string
   spendMode?: 'auth_required' | 'free' | null
@@ -211,10 +211,13 @@ export interface NestPotAttachApprovedResponse {
 
 /** `POST /api/wallet/pots/attach/:requestId/approve` body. */
 export interface NestApprovePotAttachBody {
+  /** Required by Nest 1-203 — must match the attach userCode (distinct from deviceCode). */
+  userCode: string
   spendMode?: 'auth_required' | 'free'
   origin?: 'user' | 'agent'
   sparkAddress?: string
   label?: string
+  agentRef?: string
 }
 
 /* --------------------------- spend tickets ------------------------------- */

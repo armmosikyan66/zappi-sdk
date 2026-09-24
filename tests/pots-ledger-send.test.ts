@@ -228,7 +228,7 @@ describe('attach flow', () => {
     const { client, calls } = clientWith(() =>
       jsonResponse({ pot: { id: 'p1', grants: [] }, grant: { id: 'g1' }, spendMode: 'free', origin: 'agent', potClientToken: 'zpc_x' }),
     )
-    await client.approvePotAttach('r1', { spendMode: 'free' })
+    await client.approvePotAttach('r1', { userCode: 'AB3K-9Q2M', spendMode: 'free' })
     expect(calls[0]!.url).toBe('http://nest.test/api/wallet/pots/attach/r1/approve')
   })
 })
