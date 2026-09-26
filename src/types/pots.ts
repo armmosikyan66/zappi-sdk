@@ -146,7 +146,6 @@ export interface NestAgentPotDepositAddressBody {
 
 export interface NestPotAttachPendingResponse {
   requestId: string
-  userCode: string
   /**
    * High-entropy device/polling secret (RFC 8628 device_code). Returned once
    * on create. Never put in approveUrl. Host secret — send as
@@ -165,6 +164,8 @@ export interface NestCreatePotAttachBody {
   origin?: 'user' | 'agent'
   agentRef?: string
   label?: string
+  /** Pot this host should attach. The approve page assigns this pot. */
+  potId?: string
 }
 
 /**
@@ -175,12 +176,13 @@ export interface NestCreatePotAttachBody {
 export interface NestPotAttachPollResponse {
   status: 'pending' | 'approved' | 'denied' | 'expired'
   requestId: string
-  userCode?: string
   spendMode?: string | null
   expiresAt?: string
   label?: string | null
   agentRef?: string | null
   sparkAddress?: string | null
+  /** Pot the bot asked to attach. Set while the request is pending. */
+  requestedPotId?: string | null
   potId?: string | null
   origin?: string | null
   grantId?: string | null

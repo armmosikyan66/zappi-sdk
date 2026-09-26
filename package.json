@@ -1,6 +1,6 @@
 {
   "name": "@zappimoney/zappi-sdk",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Zappi deposit/withdraw contract, API client, webhook verification, wallet USDB signer, and React Query hooks. Single source of truth shared by zappi-nest, the Next.js BFF, and partners like BitKong.",
   "license": "MIT",
   "author": "Zappi",
@@ -67,7 +67,10 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\"",
     "clean": "rm -rf dist .tsup-cache",
-    "prepublishOnly": "npm run clean && npm run build"
+    "prepublishOnly": "npm run clean && npm run build",
+    "release:check": "npm run typecheck && npm test",
+    "release:dry": "npm publish --access public --dry-run",
+    "release": "npm run release:check && npm publish --access public"
   },
   "peerDependencies": {
     "@buildonspark/spark-sdk": ">=0.9.0",

@@ -43,8 +43,8 @@ These routes do not use the user JWT as the grant. The grant id is the credentia
 
 Device-code pairing:
 
-1. `createPotAttach({ sparkAddress?, spendMode?, label? })` → `requestId`, `userCode`, `approveUrl`.
-2. `pollPotAttach(requestId)` until the status leaves `pending`. Poll may include `potId`, `grantId`, and `potClientToken`.
+1. `createPotAttach({ sparkAddress?, spendMode?, label? })` → `requestId`, `deviceCode`, `approveUrl`. The verification code is not in this response.
+2. `pollPotAttach(requestId)` until the status leaves `pending`. Poll may include `potId` and `grantId`. It does not include the verification code or `potClientToken`.
 3. `approvePotAttach(requestId, { spendMode })` is the signed-in user binding the pot.
 
 The SDK returns `potClientToken` when nest sends it. Callers must store it as a host secret.

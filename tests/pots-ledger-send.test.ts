@@ -185,8 +185,36 @@ describe('attach flow', () => {
     const { client, calls } = clientWith(() =>
       jsonResponse({ requestId: 'r1', userCode: 'ABCD', approveUrl: 'https://x', expiresAt: 't' }),
     )
-    await client.createPotAttach({ spendMode: 'free' })
+    const created = await client.createPotAttach({ spendMode: 'free' })
     expect(calls[0]!.url).toBe('http://nest.test/api/wallet/pots/attach')
+    expect(created).not.toHaveProperty('userCode')
+  })
+
+  it('createPotAttach and pollPotAttach never return the verification code', async () => {
+    const { client } = clientWith((call) => {
+      if (call.method === 'POST') {
+        return jsonResponse({
+          requestId: 'r1',
+          userCode: 'AB3K-9Q2M',
+          deviceCode: 'device_secret',
+          approveUrl: 'https://dev.zappi.money/?panel=pots&attach=r1&code=AB3K-9Q2M',
+          expiresAt: 't',
+        })
+      }
+      return jsonResponse({
+        status: 'pending',
+        requestId: 'r1',
+        userCode: 'AB3K-9Q2M',
+      })
+    })
+    const created = await client.createPotAttach({ spendMode: 'auth_required' })
+    expect(created).not.toHaveProperty('userCode')
+    expect(created.approveUrl).not.toContain('code=')
+    expect(created.approveUrl).not.toContain('AB3K-9Q2M')
+    expect(JSON.stringify(created)).not.toContain('AB3K-9Q2M')
+    const polled = await client.pollPotAttach('r1')
+    expect(polled).not.toHaveProperty('userCode')
+    expect(JSON.stringify(polled)).not.toContain('AB3K-9Q2M')
   })
 
   it('pollPotAttach GETs the request', async () => {

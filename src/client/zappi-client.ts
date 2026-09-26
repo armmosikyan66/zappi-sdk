@@ -889,11 +889,15 @@ export class ZappiClient {
     body: NestCreatePotAttachBody,
     signal?: AbortSignal,
   ): Promise<NestPotAttachPendingResponse> {
-    return this.call<NestPotAttachPendingResponse>('wallet/pots/attach', {
-      method: 'POST',
-      body,
-      signal,
-    })
+    const created = await this.call<NestPotAttachPendingResponse & { userCode?: string }>(
+      'wallet/pots/attach',
+      {
+        method: 'POST',
+        body,
+        signal,
+      },
+    )
+    return withoutAgentUserCode(created)
   }
 
   /**
@@ -904,10 +908,11 @@ export class ZappiClient {
     requestId: string,
     signal?: AbortSignal,
   ): Promise<NestPotAttachPollResponse> {
-    return this.call<NestPotAttachPollResponse>(
+    const polled = await this.call<NestPotAttachPollResponse & { userCode?: string }>(
       `wallet/pots/attach/${encodeURIComponent(requestId)}`,
       { signal },
     )
+    return withoutAgentUserCode(polled)
   }
 
   /**
@@ -1330,6 +1335,28 @@ async function safeJson(res: Response): Promise<unknown> {
       return undefined
     }
   }
+}
+
+/**
+ * Agent attach responses. Drop the verification code and any `code` query
+ * before the value reaches the CLI. The signed-in Zappi page loads the code
+ * on its own route.
+ */
+function withoutAgentUserCode<T extends { userCode?: string; approveUrl?: string }>(
+  body: T,
+): Omit<T, 'userCode'> {
+  const next = { ...body }
+  delete next.userCode
+  if (typeof next.approveUrl === 'string') {
+    try {
+      const url = new URL(next.approveUrl)
+      url.searchParams.delete('code')
+      next.approveUrl = url.toString()
+    } catch {
+      next.approveUrl = next.approveUrl.replace(/([?&])code=[^&]*/g, '$1')
+    }
+  }
+  return next
 }
 
 function parseSsePart(part: string): unknown {
