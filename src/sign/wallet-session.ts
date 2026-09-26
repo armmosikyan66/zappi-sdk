@@ -25,12 +25,21 @@ export interface WalletTokenBalanceAmounts {
 
 export type WalletTokenBalances = Record<string, WalletTokenBalanceAmounts>
 
+export interface WalletTransferEvent {
+  /** Spark transfer id of the incoming transfer that was claimed. */
+  transferId: string
+  /** Wallet's new total sats balance after the claim, as a string. */
+  updatedBalanceSats: string
+}
+
 type TokenListener = (balances: WalletTokenBalances) => void
+type TransferListener = (event: WalletTransferEvent) => void
 
 interface Hold {
   wallet: SparkWallet
   count: number
   listeners: Set<TokenListener>
+  transferListeners: Set<TransferListener>
   bound: boolean
 }
 
@@ -67,6 +76,7 @@ export async function acquireHeldWallet(
       wallet,
       count: 0,
       listeners: new Set<TokenListener>(),
+      transferListeners: new Set<TransferListener>(),
       bound: false,
     }
     hold.count += 1
@@ -87,6 +97,7 @@ export async function releaseHeldWallet(
   if (hold.count > 0) return
   holds.delete(id)
   hold.listeners.clear()
+  hold.transferListeners.clear()
   await hold.wallet.cleanup()
 }
 
@@ -115,6 +126,31 @@ export async function subscribeHeldWallet(
   }
 }
 
+/**
+ * Push incoming transfer claims for a wallet whose seed we hold. Listens to
+ * `transfer:claimed`, which fires only for INCOMING Spark-to-Spark transfers
+ * (not outgoing Lightning sends or withdrawals). A dropped stream does not
+ * replay missed events — callers must reconcile via a transfer list poll.
+ */
+export async function subscribeHeldWalletTransfers(
+  input: NormalizedWalletSession,
+  listener: TransferListener,
+): Promise<() => Promise<void>> {
+  const id = sessionKey(input)
+  await acquireHeldWallet(input)
+  const hold = holds.get(id)
+  if (!hold) {
+    await releaseHeldWallet(input)
+    throw new Error('Spark wallet session closed before subscribe')
+  }
+  hold.transferListeners.add(listener)
+  bind(hold)
+  return async () => {
+    hold.transferListeners.delete(listener)
+    await releaseHeldWallet(input)
+  }
+}
+
 function bind(hold: Hold): void {
   if (hold.bound) return
   hold.bound = true
@@ -124,6 +160,15 @@ function bind(hold: Hold): void {
   hold.wallet.on(SparkWalletEvent.StreamConnected, () => {
     void publishCached(hold)
   })
+  hold.wallet.on(
+    SparkWalletEvent.TransferClaimed,
+    (transferId: string, updatedBalance: bigint) => {
+      emitTransfer(hold, {
+        transferId,
+        updatedBalanceSats: updatedBalance.toString(),
+      })
+    },
+  )
 }
 
 function emit(
@@ -138,6 +183,10 @@ function emit(
     }
   }
   for (const listener of hold.listeners) listener(record)
+}
+
+function emitTransfer(hold: Hold, event: WalletTransferEvent): void {
+  for (const listener of hold.transferListeners) listener(event)
 }
 
 async function publishCached(hold: Hold): Promise<void> {
