@@ -89,6 +89,8 @@ export interface WalletBalance {
   >
   pendingTransfers: unknown[]
   recentTransfers: unknown[]
+  /** Available Spark BTC in sats when Nest could read it. */
+  balanceBtcSats?: number
 }
 
 /** @deprecated Renamed to {@link WalletBalance}. */

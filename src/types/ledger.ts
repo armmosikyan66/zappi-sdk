@@ -17,6 +17,7 @@ export type LedgerTransactionType =
   | 'spark_send_out'
   | 'spark_receive_in'
   | 'lightning_receive'
+  | 'swap'
 
 export type LedgerTransactionStatus = 'completed' | 'pending' | 'failed'
 
@@ -52,9 +53,11 @@ export interface LedgerTransactionOrchestration {
 export interface LedgerTransaction {
   id: string
   type: LedgerTransactionType
-  currency: 'usd'
+  currency: 'usd' | 'btc'
   status: LedgerTransactionStatus
   amountCents: number
+  amountSats?: number
+  swapId?: string
   occurredAt: string
   combo?: { asset: string; network: string }
   direction?: 'sent' | 'received'

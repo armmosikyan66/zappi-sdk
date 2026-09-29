@@ -14,3 +14,9 @@ updated: 2026-09-22
 - summary: wiki/sources/readme.md, wiki/sources/public-api.md
 - touched: wiki/overview.md, wiki/usages.md, wiki/client/deposit.md, wiki/client/withdraw.md, wiki/client/partner.md, wiki/client/pots.md, wiki/client/ledger-send.md, wiki/reference/install.md, wiki/reference/auth.md, wiki/reference/amounts.md, wiki/reference/errors.md, wiki/reference/webhooks.md, wiki/reference/sign.md, wiki/reference/react.md, wiki/reference/migration.md, wiki/reference/develop.md, wiki/flows/two-phase.md, wiki/index.md
 - notes: README and source comments say `@zappi/sdk`. `package.json` name is still `@zappimoney/zappi-sdk` at 0.3.1. README says 0.1.x aliases drop in 0.3; they are still exported. `package.json` exports `./two-phase`; the README subpath table omits it. Class comment says never import `ZappiClient` in the browser; `auth.kind: 'bff'` is the browser-safe path and is allowed.
+
+## [2026-09-29] ship | Nest 1-396 swap + BTC balance contract
+- new: wiki/client/swap.md
+- touched: wiki/usages.md, wiki/index.md, wiki/client/deposit.md, wiki/client/ledger-send.md, wiki/sources/public-api.md
+- notes: `WalletBalance.balanceBtcSats`. `executeSwap` / `executeDepositBtc` / `getSwapRoutes` / `getSwapStatus`. Ledger `swap` type + `SwapTransaction`. Web swap sheet is the sibling ticket (1-395); account-default routing waits on these Nest endpoints.
+

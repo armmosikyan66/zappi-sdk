@@ -384,3 +384,80 @@ describe('send (user-facing)', () => {
     )
   })
 })
+
+describe('swap (user-facing)', () => {
+  it('getSwapRoutes GETs live routes', async () => {
+    const { client, calls } = clientWith(() =>
+      jsonResponse({ ok: true, inVault: [], depositIntoBtc: [] }),
+    )
+    await client.getSwapRoutes()
+    expect(calls[0]!.url).toBe('http://nest.test/api/wallet/swap/routes')
+  })
+
+  it('executeSwap POSTs', async () => {
+    const { client, calls } = clientWith(() =>
+      jsonResponse({
+        ok: true,
+        swapId: 's1',
+        purpose: 'swap',
+        status: 'awaiting_signature',
+        sourceChain: 'spark',
+        sourceAsset: 'USDB',
+        destinationChain: 'spark',
+        destinationAsset: 'BTC',
+        amountIn: '10000000',
+        feeAttached: true,
+        feeRejected: false,
+      }),
+    )
+    await client.executeSwap({
+      direction: 'usdb_to_btc',
+      amountCents: 1000,
+      idempotencyKey: 'k1',
+    })
+    expect(calls[0]!.method).toBe('POST')
+    expect(calls[0]!.url).toBe('http://nest.test/api/wallet/swap')
+  })
+
+  it('executeDepositBtc POSTs', async () => {
+    const { client, calls } = clientWith(() =>
+      jsonResponse({
+        ok: true,
+        swapId: 's2',
+        purpose: 'deposit_btc',
+        status: 'awaiting_deposit',
+        sourceChain: 'base',
+        sourceAsset: 'USDC',
+        destinationChain: 'spark',
+        destinationAsset: 'BTC',
+        amountIn: '1000000',
+        feeAttached: false,
+        feeRejected: false,
+      }),
+    )
+    await client.executeDepositBtc({
+      sourceChain: 'base',
+      sourceAsset: 'USDC',
+      amountCents: 100,
+      idempotencyKey: 'k2',
+    })
+    expect(calls[0]!.url).toBe('http://nest.test/api/wallet/swap/deposit-btc')
+  })
+
+  it('getSwapStatus forwards swapId', async () => {
+    const { client, calls } = clientWith(() =>
+      jsonResponse({
+        ok: true,
+        swapId: 's1',
+        status: 'completed',
+        purpose: 'swap',
+        feeAttached: true,
+        feeRejected: false,
+      }),
+    )
+    await client.getSwapStatus('s1')
+    expect(calls[0]!.url).toBe(
+      'http://nest.test/api/wallet/swap/status?swapId=s1',
+    )
+  })
+})

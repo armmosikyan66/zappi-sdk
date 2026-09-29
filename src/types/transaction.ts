@@ -92,17 +92,28 @@ export interface TransferTransactionUsd extends BaseTransaction {
   contactId?: string
 }
 
+export interface SwapTransaction extends BaseTransaction {
+  type: 'swap'
+  /** Destination currency of the swap (BTC credit or USDB credit). */
+  currency: 'usd' | 'btc'
+  amountCents: number
+  amountSats: number
+  swapId?: string
+}
+
 /**
  * Transactions are a **discriminated union**, not a single shape with optional
  * amount fields. Every row is a single-currency ledger event — exactly one of
- * `amountSats` / `amountCents` is present, matching `currency`. The union
- * prevents the "currency says btc but the amount is in cents" footgun.
+ * `amountSats` / `amountCents` is present, matching `currency`. Swap rows
+ * carry both legs. The union prevents the "currency says btc but the amount
+ * is in cents" footgun.
  */
 export type Transaction =
   | LedgerTransactionBtc
   | LedgerTransactionUsd
   | TransferTransactionBtc
   | TransferTransactionUsd
+  | SwapTransaction
 
 export type TransactionType = Transaction['type']
 

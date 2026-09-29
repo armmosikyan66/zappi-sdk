@@ -1,10 +1,10 @@
 ---
 type: index
 tags: [meta, sdk]
-updated: 2026-09-22
+updated: 2026-09-29
 source_count: 2
-page_count: 21
-last_change: 2026-09-22 Bootstrap zappi-sdk wiki from README and public source.
+page_count: 22
+last_change: 2026-09-29 Nest 1-396 swap + BTC balance contract.
 ---
 
 # zappi-sdk Wiki
@@ -50,6 +50,7 @@ The buyer CLI that calls this client is documented in `packages/zappi-cli/wiki/`
 - [[client/partner]] — partner withdraw, Lightning address, internal send, status poll.
 - [[client/pots]] — pots, grants, spend gate, attach, spend tickets.
 - [[client/ledger-send]] — transactions, resolve, internal and external send.
+- [[client/swap]] — USDB ↔ BTC in-vault swap and deposit-into-BTC.
 
 ## Reference
 

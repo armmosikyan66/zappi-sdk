@@ -103,6 +103,15 @@ Browser: `apiUrl: ''`, `auth: { kind: 'bff' }`. Auth rules: [[reference/auth]].
 | `getSendStatus(withdrawId, signal?)` | `GET wallet/send/status?withdrawId=` |
 | `subscribeCashierEvents(onEvent, onError?, signal?)` | `GET wallet/events` (SSE). Returns unsubscribe. |
 
+## Swap — [[client/swap]]
+
+| Method | Route |
+| --- | --- |
+| `getSwapRoutes(signal?)` | `GET wallet/swap/routes` |
+| `executeSwap(body, authorizationToken?, signal?)` | `POST wallet/swap` |
+| `executeDepositBtc(body, authorizationToken?, signal?)` | `POST wallet/swap/deposit-btc` |
+| `getSwapStatus(swapId, signal?)` | `GET wallet/swap/status?swapId=` |
+
 ## Other exports
 
 Amounts, combos, address families: [[reference/amounts]]. Errors: [[reference/errors]]. Webhooks and quote tokens: [[reference/webhooks]]. Signer: [[reference/sign]]. Hooks: [[reference/react]]. Two-phase: [[flows/two-phase]].

@@ -28,6 +28,10 @@ Ledger types cover BTC and USD rows plus transfers. Status is `completed | pendi
 
 `getSendStatus(withdrawId)` polls an external-address send.
 
+## Swap
+
+See [[client/swap]] for `getSwapRoutes`, `executeSwap`, `executeDepositBtc`, and `getSwapStatus`.
+
 ## Events
 
 `subscribeCashierEvents(onEvent, onError?, signal?)` opens `GET /api/wallet/events` as SSE via fetch and `ReadableStream`, not `EventSource`, so auth headers can be set. It returns an unsubscribe function. Events are untyped `unknown` at the client; the React hook casts them to `CashierEvent` ([[reference/react]]).

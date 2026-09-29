@@ -47,4 +47,4 @@ It loads the deposit catalog and creates the address in parallel.
 
 `generateLightningInvoice(amountSats)` posts `{ amountSats }` and returns a `LightningInvoice` (amount-locked BOLT11).
 
-`getWalletBalance` returns the readonly balance envelope (`walletAddress`, token balances, pending and recent transfers). `getBalance` is the old name.
+`getWalletBalance` returns the readonly balance envelope (`walletAddress`, token balances, pending and recent transfers, optional `balanceBtcSats`). `getBalance` is the old name.

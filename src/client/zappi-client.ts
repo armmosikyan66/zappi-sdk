@@ -84,6 +84,13 @@ import type {
   NestSendStatusResponse,
   NestValidateSendAddressResponse,
 } from '../types/send'
+import type {
+  NestCreateDepositBtcBody,
+  NestCreateSwapBody,
+  NestSwapExecuteResponse,
+  NestSwapRoutesResponse,
+  NestSwapStatusResponse,
+} from '../types/swap'
 import { lookupDepositNetworkCopy, mapNestDepositOptions, nestSparkNetwork } from './mappers/deposit-map'
 import {
   mapNestEstimate,
@@ -1138,6 +1145,60 @@ export class ZappiClient {
   ): Promise<NestSendStatusResponse> {
     return this.call<NestSendStatusResponse>(
       `wallet/send/status?withdrawId=${encodeURIComponent(withdrawId)}`,
+      { signal },
+    )
+  }
+
+  /* ----------------------------- Swap (1-396) ----------------------------- */
+
+  /** `GET /api/wallet/swap/routes` — live in-vault USDB ↔ BTC and deposit-into-BTC sources. */
+  async getSwapRoutes(signal?: AbortSignal): Promise<NestSwapRoutesResponse> {
+    return this.call<NestSwapRoutesResponse>('wallet/swap/routes', { signal })
+  }
+
+  /**
+   * `POST /api/wallet/swap` — quote or submit an in-vault USDB ↔ BTC swap.
+   * Omit `sparkTxHash` to receive the quote; retry with the same
+   * `idempotencyKey` plus hash after the browser signs.
+   */
+  async executeSwap(
+    body: NestCreateSwapBody,
+    authorizationToken?: string | null,
+    signal?: AbortSignal,
+  ): Promise<NestSwapExecuteResponse> {
+    return this.call<NestSwapExecuteResponse>('wallet/swap', {
+      method: 'POST',
+      body,
+      authorizationToken,
+      signal,
+    })
+  }
+
+  /**
+   * `POST /api/wallet/swap/deposit-btc` — quote or submit a live source → spark/BTC
+   * deposit. Spark sources retry with `sparkTxHash`; on-chain sources retry with
+   * `sourceTxHash`.
+   */
+  async executeDepositBtc(
+    body: NestCreateDepositBtcBody,
+    authorizationToken?: string | null,
+    signal?: AbortSignal,
+  ): Promise<NestSwapExecuteResponse> {
+    return this.call<NestSwapExecuteResponse>('wallet/swap/deposit-btc', {
+      method: 'POST',
+      body,
+      authorizationToken,
+      signal,
+    })
+  }
+
+  /** `GET /api/wallet/swap/status?swapId=` — poll a swap / deposit-into-BTC. */
+  async getSwapStatus(
+    swapId: string,
+    signal?: AbortSignal,
+  ): Promise<NestSwapStatusResponse> {
+    return this.call<NestSwapStatusResponse>(
+      `wallet/swap/status?swapId=${encodeURIComponent(swapId)}`,
       { signal },
     )
   }
