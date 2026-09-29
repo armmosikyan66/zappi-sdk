@@ -44,9 +44,9 @@ export interface DepositDestination {
   address: string
   /**
    * What the QR encodes. `bitcoin:{addr}` for mainnet, `lightning:{addr}`
-   * for Lightning, EIP-681 `ethereum:<token>@chainId/transfer?address=` for
-   * EVM ERC-20 stables when Orchestra returned a contract, raw address
-   * otherwise.
+   * for Lightning, `ethereum:{addr}@{chainId}` for native ETH, and the
+   * deposit address itself for stablecoins (USDC, USDT) so a scan matches
+   * the address shown on screen.
    */
   qrPayload: string
   /** URI scheme for the "Open in wallet" affordance. Null when none applies. */

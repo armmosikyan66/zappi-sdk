@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { mapNestDepositDestination, nestSourceTokenMeta } from '../src/client/mappers/deposit-destination-map'
-import { evmErc20TransferUri } from '../src/client/presentation/deposit-presentation'
 
 describe('nestSourceTokenMeta', () => {
   it('reads nested nest sourceToken', () => {
@@ -48,7 +47,7 @@ describe('nestSourceTokenMeta', () => {
 })
 
 describe('mapNestDepositDestination', () => {
-  it('builds an EIP-681 QR from nested sourceToken', () => {
+  it('encodes the deposit address in the QR when nest returns a source token', () => {
     const combo = { asset: 'usdc', network: 'base' } as const
     const dest = mapNestDepositDestination(combo, {
       ok: true,
@@ -60,13 +59,7 @@ describe('mapNestDepositDestination', () => {
       },
     })
     expect(dest.address).toBe('0xDeposit')
-    expect(dest.qrPayload).toBe(
-      evmErc20TransferUri(
-        '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-        8453,
-        '0xDeposit',
-      ),
-    )
+    expect(dest.qrPayload).toBe('0xDeposit')
     expect(dest.tokenContract).toBe('0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913')
     expect(dest.chainId).toBe(8453)
   })

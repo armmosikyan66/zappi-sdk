@@ -66,6 +66,7 @@ import type {
   NestPotAttachCredentialsResponse,
   NestPotAttachPendingResponse,
   NestPotAttachPollResponse,
+  NestPotAttachPreviewResponse,
   NestPotBalanceResponse,
   NestPotDepositAddressResponse,
   NestPotSpendGateResponse,
@@ -883,6 +884,21 @@ export class ZappiClient {
   }
 
   /* ------------------------------ attach flow ------------------------------ */
+
+  /**
+   * `GET /api/wallet/pots/attach/preview?potId=` — public bot pre-check.
+   * Returns `{ exists, spendMode, status, bindable }` only. No address or secrets.
+   */
+  async previewPotAttach(
+    potId: string,
+    signal?: AbortSignal,
+  ): Promise<NestPotAttachPreviewResponse> {
+    const qs = `?potId=${encodeURIComponent(potId)}`
+    return this.call<NestPotAttachPreviewResponse>(
+      `wallet/pots/attach/preview${qs}`,
+      { signal },
+    )
+  }
 
   /** `POST /api/wallet/pots/attach` — create a pending pot attach (device-code P1). */
   async createPotAttach(

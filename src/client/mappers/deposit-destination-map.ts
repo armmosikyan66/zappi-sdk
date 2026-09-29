@@ -37,7 +37,7 @@ function readNestedSourceToken(value: unknown): NestOrchestraSourceToken | null 
   }
 }
 
-/** Pull EIP-681 token meta from nested nest `sourceToken` or flattened aliases. */
+/** Pull source-token meta from nested nest `sourceToken` or flattened aliases. */
 export function nestSourceTokenMeta(res: unknown): EvmTokenMeta {
   const data = (isRecord(res) ? res : {}) as NestDestinationPayload
   const nested = readNestedSourceToken(data.sourceToken)

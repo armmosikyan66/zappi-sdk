@@ -103,7 +103,7 @@ describe('createPartnerDepositDestination', () => {
     expect(dest.feesCopy).toBe('~$0.01–0.10')
     expect(dest.estimatedArrivalCopy).toBe('~1–3 min')
     expect(dest.tokenContract).toBe('0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913')
-    expect(dest.qrPayload).toContain('ethereum:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913@8453/transfer')
+    expect(dest.qrPayload).toBe('0xStanding')
 
     const standing = calls.find((call) => call.url.endsWith('/api/wallet/standing-deposit-address'))
     expect(standing?.method).toBe('POST')

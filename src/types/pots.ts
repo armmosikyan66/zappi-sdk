@@ -12,7 +12,7 @@
 
 export type AgentPotOrigin = 'user' | 'agent' | 'unknown'
 export type AgentPotSpendMode = 'auth_required' | 'free' | 'unknown'
-export type AgentPotStatus = 'active' | 'revoked'
+export type AgentPotStatus = 'active' | 'revoked' | 'pending'
 export type AgentPotGrantStatus = 'none' | 'active' | 'revoked'
 
 export interface AgentPotGrant {
@@ -27,7 +27,8 @@ export interface AgentPotGrant {
 
 export interface AgentPot {
   id: string
-  sparkAddress: string
+  /** Null while a free pot is `pending` (addressless, not yet bound). */
+  sparkAddress: string | null
   label: string | null
   agentRef: string | null
   status: AgentPotStatus
@@ -166,6 +167,15 @@ export interface NestCreatePotAttachBody {
   label?: string
   /** Pot this host should attach. The approve page assigns this pot. */
   potId?: string
+}
+
+/** `GET /api/wallet/pots/attach/preview?potId=` — public bot pre-check. */
+export interface NestPotAttachPreviewResponse {
+  exists: boolean
+  spendMode: AgentPotSpendMode | null
+  status: AgentPotStatus | null
+  /** True when the pot is free + `pending` (addressless) and ready to bind. */
+  bindable: boolean
 }
 
 /**

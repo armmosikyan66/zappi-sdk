@@ -5,7 +5,7 @@ import {
   isStableNetwork,
 } from '../../combo'
 
-/** Live Orchestra source-token fields used to encode EIP-681 ERC-20 transfers. */
+/** Live Orchestra source-token fields shown beside the deposit address. */
 export type EvmTokenMeta = {
   tokenContract?: string | null
   chainId?: number | null
@@ -39,8 +39,8 @@ function isRegtestSparkNetwork(
 }
 
 /**
- * EIP-681 ERC-20 transfer URI. Wallets that scan this send the token, not
- * native ETH. Amount is omitted — standing deposit addresses accept any size.
+ * EIP-681 ERC-20 transfer URI. Not used for deposit QRs — those encode the
+ * deposit address itself so a scan matches the address on screen.
  * https://eips.ethereum.org/EIPS/eip-681
  */
 export function evmErc20TransferUri(
@@ -82,11 +82,10 @@ export function depositQrPayload(
     }
     return address
   }
-  if (isEvmStableNetwork(combo.network) && token?.tokenContract && token.chainId != null) {
-    return evmErc20TransferUri(token.tokenContract, token.chainId, address)
-  }
+  // Stablecoin QRs encode the deposit address, not an EIP-681 transfer URI.
+  // That URI leads with the token contract, so a scan does not match the address.
   if (combo.network === 'tron') return `tron:${address.trim()}`
-  return address
+  return address.trim()
 }
 
 /** Build per-wallet deep-link buttons for a deposit destination. */
