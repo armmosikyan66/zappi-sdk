@@ -1,10 +1,10 @@
 ---
 type: index
 tags: [meta, sdk]
-updated: 2026-09-29
+updated: 2026-09-30
 source_count: 2
-page_count: 22
-last_change: 2026-09-29 Nest 1-396 swap + BTC balance contract.
+page_count: 23
+last_change: 2026-09-30 Clean Code skill in .agents/skills and wiki.
 ---
 
 # zappi-sdk Wiki
@@ -63,6 +63,7 @@ The buyer CLI that calls this client is documented in `packages/zappi-cli/wiki/`
 - [[reference/react]] — React Query hooks.
 - [[reference/migration]] — 0.1.x aliases still exported at 0.3.1.
 - [[reference/develop]] — build, test, publish.
+- [[reference/clean-code]] — project skill `.agents/skills/clean-code` for SDK readability.
 
 ## Flows
 

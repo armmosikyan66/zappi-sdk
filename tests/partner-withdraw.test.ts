@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ZappiClient } from '../src/client/zappi-client'
 import {
   mapPartnerExecuteToConfirmation,
+  toNestWithdrawBody,
   toPartnerWithdrawBody,
 } from '../src/client/mappers/withdraw-map'
 import type { WithdrawQuotePayload } from '../src/quote/quote-token'
@@ -53,6 +54,29 @@ describe('toPartnerWithdrawBody', () => {
       address: 'So111',
       amountCents: 100,
       idempotencyKey: 'wd:1',
+    })
+  })
+})
+
+describe('toNestWithdrawBody', () => {
+  it('sends amountSats and omits amountCents for BTC Lightning', () => {
+    const payload: WithdrawQuotePayload = {
+      userId: 'u1',
+      combo: { asset: 'btc', network: 'lightning' },
+      address: 'lnbc10u1pxxxx',
+      amountCents: 0,
+      amountSats: 1000,
+      destinationDisplay: 'lnbc10u1pxxxx',
+      estimatedArrivalCopy: 'Instant',
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+    }
+    expect(toNestWithdrawBody(payload, 'web-quote:1')).toEqual({
+      asset: 'BTC',
+      networkId: 'lightning',
+      address: 'lnbc10u1pxxxx',
+      amountSats: 1000,
+      destinationType: 'external',
+      idempotencyKey: 'web-quote:1',
     })
   })
 })

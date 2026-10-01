@@ -1,4 +1,4 @@
-import type { AssetId, BtcNetwork, NetworkId, StableNetwork } from './cashier'
+import type { AssetId, BtcNetwork, NetworkId } from './cashier'
 
 /** A per-wallet deep-link button rendered below the standard URI scheme. */
 export interface WalletDeepLink {
@@ -8,7 +8,7 @@ export interface WalletDeepLink {
   uri: string
 }
 
-interface DepositNetworkOption<N extends NetworkId> {
+interface DepositNetworkOption<N extends string> {
   id: N
   name: string
   /** Omit for "no minimum". */
@@ -27,8 +27,10 @@ interface DepositNetworkOption<N extends NetworkId> {
  */
 export type DepositOption =
   | { asset: 'btc'; networks: ReadonlyArray<DepositNetworkOption<BtcNetwork>> }
-  | { asset: 'usdc' | 'usdt'; networks: ReadonlyArray<DepositNetworkOption<StableNetwork>> }
-  | { asset: 'eth'; networks: ReadonlyArray<DepositNetworkOption<'ethereum'>> }
+  | {
+      asset: 'usdc' | 'usdt' | 'eth'
+      networks: ReadonlyArray<DepositNetworkOption<string>>
+    }
 
 /**
  * A persistent deposit destination. One per (user, asset, network). The

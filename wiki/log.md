@@ -1,7 +1,7 @@
 ---
 type: log
 tags: [meta]
-updated: 2026-09-22
+updated: 2026-09-30
 ---
 
 # Wiki Log
@@ -19,4 +19,9 @@ updated: 2026-09-22
 - new: wiki/client/swap.md
 - touched: wiki/usages.md, wiki/index.md, wiki/client/deposit.md, wiki/client/ledger-send.md, wiki/sources/public-api.md
 - notes: `WalletBalance.balanceBtcSats`. `executeSwap` / `executeDepositBtc` / `getSwapRoutes` / `getSwapStatus`. Ledger `swap` type + `SwapTransaction`. Web swap sheet is the sibling ticket (1-395); account-default routing waits on these Nest endpoints.
+
+## [2026-09-30] manual | Clean Code skill
+- new: wiki/reference/clean-code.md
+- touched: wiki/index.md, .agents/skills/clean-code/
+- notes: Installed `clean-code` v1.4.0. This package had no skills directory; Cursor discovers `.agents/skills/`.
 

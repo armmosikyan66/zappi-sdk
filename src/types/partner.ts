@@ -237,7 +237,10 @@ export interface NestWithdrawBody {
   asset: string
   networkId: string
   address: string
-  amountCents: number
+  /** USDB rails. Omit for BTC→Lightning (`amountSats`). */
+  amountCents?: number
+  /** Spark BTC sats for asset=BTC and networkId=lightning. */
+  amountSats?: number
   destinationType: 'external'
   idempotencyKey: string
   sparkTxHash?: string

@@ -41,6 +41,14 @@ export function isBtcNetwork(value: string): value is BtcNetwork {
   return value === 'mainnet' || value === 'lightning'
 }
 
+const ORCHESTRA_DEPOSIT_CHAIN = /^[a-z][a-z0-9]{0,31}$/
+const RESERVED_DEPOSIT_CHAINS = new Set(['spark', 'lightning', 'mainnet', 'bitcoin'])
+
+/** Flashnet source chain the deposit catalog can list. Not a withdraw rail. */
+export function isOrchestraDepositChain(value: string): boolean {
+  return ORCHESTRA_DEPOSIT_CHAIN.test(value) && !RESERVED_DEPOSIT_CHAINS.has(value)
+}
+
 /** Is this network a stable/ETH network? */
 export function isStableNetwork(value: string): value is StableNetwork {
   return (STABLE_NETWORKS as readonly string[]).includes(value)

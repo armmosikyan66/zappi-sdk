@@ -195,21 +195,33 @@ export function mapWithdrawStatusValue(status: string): WithdrawalStatus['status
   return 'pending'
 }
 
+function isBtcLightningWithdraw(combo: WithdrawQuotePayload['combo']): boolean {
+  return combo.asset === 'btc' && combo.network === 'lightning'
+}
+
 /** Build the nest withdraw body from a quote payload (used by two-phase). */
 export function toNestWithdrawBody(
   payload: WithdrawQuotePayload,
   idempotencyKey: string,
   sparkTxHash?: string,
 ): NestWithdrawBody {
-  return {
+  const base = {
     asset: nestAsset(payload.combo),
     networkId: payload.combo.network,
     address: payload.address,
-    amountCents: payload.amountCents,
-    destinationType: 'external',
+    destinationType: 'external' as const,
     idempotencyKey,
     ...(sparkTxHash ? { sparkTxHash } : {}),
   }
+  // BTC→Lightning spends Spark sats. amountCents would quote Orchestra USDB
+  // and Orchestra rejects the BOLT11 as a payout address.
+  if (isBtcLightningWithdraw(payload.combo)) {
+    if (payload.amountSats !== undefined && payload.amountSats >= 1) {
+      return { ...base, amountSats: payload.amountSats }
+    }
+    return base
+  }
+  return { ...base, amountCents: payload.amountCents }
 }
 
 /** Build the partner product-wallet withdraw body from a BFF quote payload. */
