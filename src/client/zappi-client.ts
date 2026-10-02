@@ -1296,6 +1296,98 @@ export class ZappiClient {
     }
   }
 
+  /**
+   * Live ledger events for one partner user (`GET /api/partner/wallet/events`).
+   * Project-key auth. Reconnects with backoff. Sends `Last-Event-ID` after the
+   * first event so a dropped socket resumes from Nest's in-memory buffer.
+   * Signed `ledger.credited` webhooks stay the durable channel — a `nudge`
+   * event means refetch, not a credit.
+   */
+  subscribePartnerWalletEvents(
+    userId: string,
+    onEvent: (event: unknown) => void,
+    onError?: (error: Error) => void,
+    signal?: AbortSignal,
+  ): () => void {
+    const partnerUserId = userId.trim()
+    if (!partnerUserId) {
+      throw new ZappiApiError(422, 'Unprocessable Entity', {
+        ok: false,
+        error: 'VALIDATION_ERROR',
+        message: 'userId is required.',
+      })
+    }
+    const controller = new AbortController()
+    const linked = signal ? linkSignals(signal, controller) : undefined
+    assertServerSideAuth(this.defaultAuth, 'subscribePartnerWalletEvents')
+
+    let closed = false
+    let reconnectMs = 1_000
+    let lastEventId: string | null = null
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+
+    const connect = async () => {
+      if (closed || controller.signal.aborted) return
+      const url = new URL(`${this.apiUrl}/api/partner/wallet/events`)
+      url.searchParams.set('userId', partnerUserId)
+      const headers = this.buildHeaders(this.defaultAuth, undefined)
+      headers.set('Accept', 'text/event-stream')
+      if (lastEventId) headers.set('Last-Event-ID', lastEventId)
+      try {
+        const res = await this.fetchFn(url, {
+          method: 'GET',
+          headers,
+          signal: controller.signal,
+          cache: 'no-store',
+          credentials: this.defaultAuth.kind === 'bff' ? 'include' : undefined,
+        })
+        if (!res.ok || !res.body) {
+          throw new ZappiApiError(res.status, res.statusText, await safeJson(res))
+        }
+        reconnectMs = 1_000
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+        for (;;) {
+          const { value, done } = await reader.read()
+          if (done) break
+          buffer += decoder.decode(value, { stream: true })
+          const parts = buffer.split('\n\n')
+          buffer = parts.pop() ?? ''
+          for (const part of parts) {
+            const parsed = parseSseMessage(part)
+            if (!parsed) continue
+            if (parsed.id) lastEventId = parsed.id
+            if (parsed.data !== undefined) onEvent(parsed.data)
+          }
+        }
+        if (!closed) scheduleReconnect()
+      } catch (error) {
+        if (closed || controller.signal.aborted) return
+        if (onError) onError(error instanceof Error ? error : new Error(String(error)))
+        scheduleReconnect()
+      }
+    }
+
+    const scheduleReconnect = () => {
+      if (closed || controller.signal.aborted) return
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null
+        reconnectMs = Math.min(reconnectMs * 2, 30_000)
+        void connect()
+      }, reconnectMs)
+    }
+
+    void connect()
+
+    return () => {
+      closed = true
+      if (reconnectTimer) clearTimeout(reconnectTimer)
+      controller.abort()
+      linked?.unlink()
+    }
+  }
+
   /* -------------------------------- internals ------------------------------- */
 
   private buildHeaders(
@@ -1437,19 +1529,23 @@ function withoutAgentUserCode<T extends { userCode?: string; approveUrl?: string
 }
 
 function parseSsePart(part: string): unknown {
-  const lines = part.split('\n')
-  for (const line of lines) {
-    if (line.startsWith('data:')) {
-      const data = line.slice(5).trim()
-      if (!data) return undefined
-      try {
-        return JSON.parse(data)
-      } catch {
-        return data
-      }
-    }
+  return parseSseMessage(part)?.data
+}
+
+function parseSseMessage(part: string): { id?: string; data?: unknown } | undefined {
+  let id: string | undefined
+  const dataLines: string[] = []
+  for (const line of part.split('\n')) {
+    if (line.startsWith('id:')) id = line.slice(3).trim()
+    else if (line.startsWith('data:')) dataLines.push(line.slice(5).trimStart())
   }
-  return undefined
+  if (dataLines.length === 0) return id ? { id } : undefined
+  const raw = dataLines.join('\n')
+  try {
+    return { ...(id ? { id } : {}), data: JSON.parse(raw) as unknown }
+  } catch {
+    return { ...(id ? { id } : {}), data: raw }
+  }
 }
 
 /** Link an external signal to a controller so abort propagates both ways. */

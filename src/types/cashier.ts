@@ -8,7 +8,7 @@
  */
 
 /** Deposit asset the user picks at step 1 of the wizard. */
-export type AssetId = 'btc' | 'usdc' | 'usdt' | 'eth'
+export type AssetId = 'btc' | 'usdc' | 'usdt' | 'eth' | 'usdb'
 
 /** Bitcoin networks. `btc` covers both; the network differentiates them. */
 export type BtcNetwork = 'mainnet' | 'lightning'
@@ -38,8 +38,11 @@ export type DepositCombo =
   | { asset: 'usdc' | 'usdt'; network: StableNetwork }
   | { asset: 'eth'; network: 'ethereum' }
 
+/** Dollar balance → Lightning. The sender swaps USDB to BTC, then pays the invoice. */
+export type UsdbLightningCombo = { asset: 'usdb'; network: 'lightning' }
+
 /** Valid (asset, network) pairs for on/off-ramp flows. */
-export type CashierCombo = DepositCombo
+export type CashierCombo = DepositCombo | UsdbLightningCombo
 export type WithdrawCombo = CashierCombo
 
 /** Which ledger a balance / amount belongs to. */

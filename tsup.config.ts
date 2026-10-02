@@ -11,6 +11,8 @@ export default defineConfig({
     index: 'src/index.ts',
     'sign/index': 'src/sign/index.ts',
     'react/index': 'src/react/index.ts',
+    'realtime/index': 'src/realtime/index.ts',
+    'realtime/react': 'src/realtime/react.tsx',
     'two-phase': 'src/quote/two-phase.ts',
   },
   format: ['esm', 'cjs'],

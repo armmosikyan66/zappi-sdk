@@ -104,7 +104,9 @@ export async function releaseHeldWallet(
 /**
  * Push USDB (and other token) balances for a wallet whose seed we hold.
  * Listens to `token-balance:update`. On subscribe and on `stream:connected`,
- * reads `getCachedBalance()` — a dropped stream does not replay missed events.
+ * reads `getBalance()` so a refresh syncs token outputs with the coordinator
+ * instead of painting the in-memory cache. A dropped stream does not replay
+ * missed events. If that sync fails, falls back to `getCachedBalance()`.
  */
 export async function subscribeHeldWallet(
   input: NormalizedWalletSession,
@@ -119,7 +121,7 @@ export async function subscribeHeldWallet(
   }
   hold.listeners.add(listener)
   bind(hold)
-  void publishCached(hold)
+  void publishSnapshot(hold)
   return async () => {
     hold.listeners.delete(listener)
     await releaseHeldWallet(input)
@@ -158,7 +160,7 @@ function bind(hold: Hold): void {
     emit(hold, event.tokenBalances)
   })
   hold.wallet.on(SparkWalletEvent.StreamConnected, () => {
-    void publishCached(hold)
+    void publishSnapshot(hold)
   })
   hold.wallet.on(
     SparkWalletEvent.TransferClaimed,
@@ -189,7 +191,15 @@ function emitTransfer(hold: Hold, event: WalletTransferEvent): void {
   for (const listener of hold.transferListeners) listener(event)
 }
 
-async function publishCached(hold: Hold): Promise<void> {
+async function publishSnapshot(hold: Hold): Promise<void> {
+  try {
+    const { tokenBalances } = await hold.wallet.getBalance()
+    emit(hold, tokenBalances)
+    return
+  } catch {
+    // Coordinator sync can fail on a cold start. The cache is still the
+    // last stream snapshot; the next connect retries getBalance().
+  }
   try {
     const { tokenBalances } = await hold.wallet.getCachedBalance()
     emit(hold, tokenBalances)

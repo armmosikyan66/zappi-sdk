@@ -14,3 +14,8 @@ export {
   type UseConfirmWithdrawalOptions,
 } from './use-withdraw'
 export { useCashierEvents, type UseCashierEventsResult } from './use-cashier-events'
+export {
+  useWalletRealtime,
+  type UseWalletRealtimeOptions,
+  type UseWalletRealtimeResult,
+} from '../realtime/react'

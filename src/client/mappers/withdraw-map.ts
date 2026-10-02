@@ -56,6 +56,29 @@ export function mapNestWithdrawOptions(
       continue
     }
 
+    if (option.asset === 'usdb') {
+      const networks = option.networks.flatMap((network) => {
+        if (network.id !== 'lightning') return []
+        return [
+          {
+            id: 'lightning' as const,
+            name: network.name,
+            typicalFeeCopy: network.typicalFeeCopy,
+            estimatedArrivalCopy: network.estimatedArrivalCopy,
+            ...(network.minWithdrawCents !== undefined
+              ? { minWithdrawCents: network.minWithdrawCents }
+              : {}),
+            ...(network.maxWithdrawCents !== undefined
+              ? { maxWithdrawCents: network.maxWithdrawCents }
+              : {}),
+          },
+        ]
+      })
+      if (networks.length === 0) continue
+      mapped.push({ asset: 'usdb', networks })
+      continue
+    }
+
     if (option.asset === 'eth') continue
 
     const networks = option.networks.flatMap((network) => {
@@ -196,7 +219,10 @@ export function mapWithdrawStatusValue(status: string): WithdrawalStatus['status
 }
 
 function isBtcLightningWithdraw(combo: WithdrawQuotePayload['combo']): boolean {
-  return combo.asset === 'btc' && combo.network === 'lightning'
+  return (
+    combo.network === 'lightning' &&
+    (combo.asset === 'btc' || combo.asset === 'usdb')
+  )
 }
 
 /** Build the nest withdraw body from a quote payload (used by two-phase). */

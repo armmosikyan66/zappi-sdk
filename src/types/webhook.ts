@@ -30,6 +30,9 @@ export interface FlashnetWebhookEnvelope {
 export interface LedgerCreditedEvent {
   ok: true
   event: 'ledger.credited'
+  /** Stable id. Redeliveries of the same credit reuse it. */
+  eventId?: string
+  occurredAt: string
   transactionId: string
   projectId: string
   userId: string
@@ -43,5 +46,4 @@ export interface LedgerCreditedEvent {
   }
   sparkTxHash?: string | null
   flashnetOrderId?: string | null
-  occurredAt: string
 }

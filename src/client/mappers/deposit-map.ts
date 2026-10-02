@@ -18,6 +18,8 @@ export function mapNestDepositOptions(
   for (const option of payload.options) {
     if (!isCashierAsset(option.asset)) continue
 
+    if (option.asset === 'usdb') continue
+
     if (option.asset === 'btc') {
       const networks = option.networks.flatMap((network) => {
         if (!isBtcNetwork(network.id)) return []

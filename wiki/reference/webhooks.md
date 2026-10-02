@@ -22,6 +22,10 @@ const envelope = parseWebhookEnvelope(rawBody)
 
 The verify comment names the partner secret `FLASHNET_WEBHOOK_SECRET`.
 
+Outbound `ledger.credited` and `payment.*` callbacks include `eventId` and `occurredAt`. Redeliveries reuse the same `eventId` (`ledger.credited:<transactionId>` or `payment.paid:<paymentId>`). Dedupe on that id.
+
+`ZappiClient.subscribePartnerWalletEvents(userId, onEvent)` opens `GET /api/partner/wallet/events` with the project key. It reconnects with backoff and sends `Last-Event-ID`. A payload with `kind: "nudge"` means refetch — it is not a credit. Signed webhooks remain the durable channel.
+
 ## Withdraw quote tokens
 
 Stateless BFF tokens. Format: `v1.<base64url(payload)>.<base64url(hmac)>`. TTL is `WITHDRAW_QUOTE_TTL_MS` (2 minutes). `QUOTE_TOKEN_VERSION` is `v1`.

@@ -12,6 +12,7 @@ export interface WithdrawNetworkOption<N extends NetworkId> {
 /** Withdraw catalog. ETH is not withdrawable today (only depositable). */
 export type WithdrawOption =
   | { asset: 'btc'; networks: ReadonlyArray<WithdrawNetworkOption<BtcNetwork>> }
+  | { asset: 'usdb'; networks: ReadonlyArray<WithdrawNetworkOption<'lightning'>> }
   | { asset: 'usdc' | 'usdt'; networks: ReadonlyArray<WithdrawNetworkOption<StableNetwork>> }
 
 export interface WithdrawalRequest {

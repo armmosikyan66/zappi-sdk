@@ -2,11 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const getOrCreateWallet = vi.fn()
 const cleanup = vi.fn(async () => undefined)
-const getCachedBalance = vi.fn(async () => ({
-  tokenBalances: new Map([
-    ['btkn1usdb', { ownedBalance: 25_000_000n, availableToSendBalance: 20_000_000n }],
-  ]),
-}))
+const tokenBalances = new Map([
+  ['btkn1usdb', { ownedBalance: 25_000_000n, availableToSendBalance: 20_000_000n }],
+])
+const getBalance = vi.fn(async () => ({ tokenBalances }))
+const getCachedBalance = vi.fn(async () => ({ tokenBalances }))
 const on = vi.fn()
 
 vi.mock('@buildonspark/spark-sdk', () => ({
@@ -28,10 +28,11 @@ const opts = {
 beforeEach(() => {
   getOrCreateWallet.mockReset()
   cleanup.mockClear()
+  getBalance.mockClear()
   getCachedBalance.mockClear()
   on.mockClear()
   getOrCreateWallet.mockImplementation(async () => ({
-    wallet: { on, getCachedBalance, cleanup, transferTokens: vi.fn() },
+    wallet: { on, getBalance, getCachedBalance, cleanup, transferTokens: vi.fn() },
   }))
 })
 
@@ -47,6 +48,7 @@ describe('subscribeWalletTokenBalances', () => {
     await withHeldSparkWallet(opts, async () => undefined)
 
     expect(getOrCreateWallet).toHaveBeenCalledTimes(1)
+    expect(getBalance).toHaveBeenCalled()
     expect(cleanup).not.toHaveBeenCalled()
 
     await stop()

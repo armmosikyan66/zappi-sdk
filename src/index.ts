@@ -5,6 +5,7 @@
  * Optional subpaths:
  * - `@zappi/sdk/sign` — Zappi wallet USDB signer (peer: `@buildonspark/spark-sdk`)
  * - `@zappi/sdk/react` — React Query hooks (peer: `react`, `@tanstack/react-query`)
+ * - `@zappi/sdk/realtime` — Spark balance stream and cashier SSE events
  */
 
 /* --------------------------------- types --------------------------------- */

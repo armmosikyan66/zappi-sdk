@@ -6,7 +6,7 @@ import type {
   StableNetwork,
 } from './types/cashier'
 
-export const CASHIER_ASSETS = ['btc', 'usdc', 'usdt', 'eth'] as const satisfies readonly AssetId[]
+export const CASHIER_ASSETS = ['btc', 'usdc', 'usdt', 'eth', 'usdb'] as const satisfies readonly AssetId[]
 
 export const BTC_NETWORKS = ['mainnet', 'lightning'] as const satisfies readonly BtcNetwork[]
 
@@ -71,6 +71,7 @@ export function isValidCashierCombo(
   network: NetworkId | null,
 ): network is NetworkId {
   if (!asset || !network) return false
+  if (asset === 'usdb') return network === 'lightning'
   if (asset === 'btc') return (BTC_NETWORKS as readonly string[]).includes(network)
   if (asset === 'eth') return network === 'ethereum'
   // Orchestra has spark:USDB ↔ tron:USDT, not USDC or native TRX.
@@ -80,6 +81,7 @@ export function isValidCashierCombo(
 
 /** Build a typed combo from a validated (asset, network) pair. */
 export function buildCashierCombo(asset: AssetId, network: NetworkId): CashierCombo {
+  if (asset === 'usdb') return { asset: 'usdb', network: 'lightning' }
   if (asset === 'btc') return { asset: 'btc', network: network as BtcNetwork }
   if (asset === 'eth') return { asset: 'eth', network: 'ethereum' }
   return { asset, network: network as StableNetwork }
@@ -110,5 +112,5 @@ export function isBtcCombo(combo: CashierCombo): boolean {
 
 /** Is this a stable/ETH combo (non-BTC)? */
 export function isStableCombo(combo: CashierCombo): boolean {
-  return combo.asset !== 'btc'
+  return combo.asset === 'usdc' || combo.asset === 'usdt' || combo.asset === 'eth'
 }
