@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import {
   depositQrPayload,
   depositWalletDeepLinks,
-  SPARK_TEST_WALLET_URL,
 } from '../src/client/presentation/deposit-presentation'
 
 describe('depositQrPayload', () => {
@@ -31,30 +30,24 @@ describe('depositQrPayload', () => {
 })
 
 describe('depositWalletDeepLinks', () => {
-  it('keeps Phantom on USDC-Solana even in REGTEST', () => {
+  it('offers Phantom for USDC on Solana', () => {
     const links = depositWalletDeepLinks(
       { asset: 'usdc', network: 'solana' },
       'solana:abc',
       undefined,
-      'REGTEST',
+      'MAINNET',
     )
     expect(links[0]?.id).toBe('phantom')
   })
 
-  it('swaps Cash App / Strike for the Spark test wallet on REGTEST', () => {
+  it('offers Cash App for a mainnet Bitcoin deposit', () => {
     expect(
       depositWalletDeepLinks(
         { asset: 'btc', network: 'mainnet' },
         'bitcoin:bc1qtest',
         undefined,
-        'REGTEST',
-      ),
-    ).toEqual([
-      {
-        id: 'spark-test-wallet',
-        label: 'Spark test wallet',
-        uri: SPARK_TEST_WALLET_URL,
-      },
-    ])
+        'MAINNET',
+      )[0]?.id,
+    ).toBe('cashapp')
   })
 })

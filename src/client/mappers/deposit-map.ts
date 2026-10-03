@@ -2,11 +2,13 @@ import type { DepositOption } from '../../types/deposit'
 import { isCashierAsset, isOrchestraDepositChain, isBtcNetwork } from '../../combo'
 import type { NestDepositOptionsResponse } from '../../types/partner'
 
-/** Spark network stamped by nest onto the deposit catalog. */
+/** Spark network stamped by nest onto the deposit catalog. Only MAINNET is valid. */
 export function nestSparkNetwork(
   payload: NestDepositOptionsResponse | null | undefined,
-): 'MAINNET' | 'REGTEST' {
-  return payload?.sparkNetwork === 'REGTEST' ? 'REGTEST' : 'MAINNET'
+): 'MAINNET' {
+  const value = String(payload?.sparkNetwork ?? '').trim().toUpperCase()
+  if (value === '' || value === 'MAINNET') return 'MAINNET'
+  throw new Error('SPARK_NETWORK must be MAINNET.')
 }
 
 /** Map a raw nest deposit-options response to the clean frontend catalog. */

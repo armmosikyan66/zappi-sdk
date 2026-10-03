@@ -20,7 +20,7 @@ export interface CreateWalletSignerOptions {
   /** HD account index. Defaults to 0. */
   accountNumber?: number
   /** Wallet network. Defaults to MAINNET. */
-  network?: 'MAINNET' | 'REGTEST'
+  network?: 'MAINNET'
 }
 
 /* ------------------------- legacy aliases (0.1.x) ------------------------- */

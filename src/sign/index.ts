@@ -29,7 +29,7 @@ import {
  * import { createWalletSigner } from '@zappi/sdk/sign'
  * const signer = await createWalletSigner({
  *   mnemonic: process.env.ZAPPI_PRODUCT_MNEMONIC!,
- *   accountNumber: 0,
+ *   accountNumber: 1,
  *   network: 'MAINNET',
  * })
  * const { sparkTxHash } = await signer.transferUsdb({
@@ -177,13 +177,14 @@ function normalizeWalletSession(opts: CreateWalletSignerOptions): NormalizedWall
   if (!mnemonic) {
     throw new WalletSignerError('MNEMONIC_REQUIRED', 'mnemonic is required')
   }
-  const accountNumber = opts.accountNumber ?? 0
-  if (!Number.isInteger(accountNumber) || accountNumber < 0) {
-    throw new WalletSignerError('INVALID_ACCOUNT', 'accountNumber must be an integer >= 0')
+  const accountNumber = opts.accountNumber ?? 1
+  if (accountNumber !== 1) {
+    throw new WalletSignerError('INVALID_ACCOUNT', 'accountNumber must be 1')
   }
-  const network = (opts.network ?? DEFAULT_WALLET_NETWORK).toUpperCase() === 'REGTEST'
-    ? 'REGTEST'
-    : 'MAINNET'
+  const network = (opts.network ?? DEFAULT_WALLET_NETWORK).toUpperCase()
+  if (network !== 'MAINNET') {
+    throw new WalletSignerError('INVALID_NETWORK', 'network must be MAINNET')
+  }
   return { mnemonic, accountNumber, network }
 }
 
@@ -193,6 +194,7 @@ export class WalletSignerError extends Error {
     readonly code:
       | 'MNEMONIC_REQUIRED'
       | 'INVALID_ACCOUNT'
+      | 'INVALID_NETWORK'
       | 'INIT_FAILED'
       | 'CLEANED_UP'
       | 'INVALID_PARAMS'

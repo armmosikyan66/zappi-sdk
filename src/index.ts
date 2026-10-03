@@ -118,7 +118,6 @@ export {
   toDepositDestination,
   walletDestinationChain,
   flashnetSourceAsset,
-  SPARK_TEST_WALLET_URL,
   isSparkIdentityAddress,
   type EvmTokenMeta,
 } from './client/presentation/deposit-presentation'

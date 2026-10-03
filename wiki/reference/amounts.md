@@ -36,7 +36,7 @@ Networks: BTC `mainnet | lightning`. Stables `solana`, `tron`, `base`, `arbitrum
 
 `NETWORK_TO_CHAIN` maps network ids to Flashnet destination chains (`binance` → `bsc`). `ASSET_TO_FLASHNET` maps `BTC`, `USDC`, `USDT`. `FALLBACK_ARRIVAL` plus `withdrawArrivalCopy(combo)` fill arrival text when nest omits it.
 
-`WalletNetwork` is `MAINNET | REGTEST`. `DEFAULT_WALLET_NETWORK` is `MAINNET`. `PRODUCT_WALLET_ACCOUNT_NUMBER` is `0`. Custody constants: `custodial` and `user-held`.
+`WalletNetwork` is `MAINNET`. `DEFAULT_WALLET_NETWORK` is `MAINNET`. `PRODUCT_WALLET_ACCOUNT_NUMBER` is `1`. Custody constants: `custodial` and `user-held`.
 
 ## Address families
 

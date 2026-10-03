@@ -52,7 +52,7 @@ export type AccountCurrency = 'btc' | 'usd'
  * Zappi wallet network selector (Spark is the underlying rail; the public SDK
  * surface talks about *the wallet's network*, not the rail vendor).
  */
-export type WalletNetwork = 'MAINNET' | 'REGTEST'
+export type WalletNetwork = 'MAINNET'
 
 /** Custody model. Withdraw always resolves to `user-held` in current code. */
 export type CustodyMode = 'custodial' | 'user-held'

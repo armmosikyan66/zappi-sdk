@@ -19,9 +19,6 @@ export function isEvmStableNetwork(
   return isStableNetwork(value) && value !== 'solana' && value !== 'tron'
 }
 
-/** Lightspark hosted Spark web wallet used on REGTEST instead of Cash App / Strike. */
-export const SPARK_TEST_WALLET_URL = 'https://docs.spark.money/tools/test-wallet'
-
 export function isSparkIdentityAddress(address: string): boolean {
   const value = address.trim().toLowerCase()
   return (
@@ -30,12 +27,6 @@ export function isSparkIdentityAddress(address: string): boolean {
     value.startsWith('sp1') ||
     value.startsWith('sprt1')
   )
-}
-
-function isRegtestSparkNetwork(
-  network?: 'MAINNET' | 'REGTEST' | null,
-): boolean {
-  return network === 'REGTEST'
 }
 
 /**
@@ -66,7 +57,7 @@ export function depositQrPayload(
   address: string,
   _lnurl?: string,
   token?: EvmTokenMeta,
-  _sparkNetwork?: 'MAINNET' | 'REGTEST' | null,
+  _sparkNetwork?: 'MAINNET' | null,
 ): string {
   if (isSparkIdentityAddress(address)) return address
   if (combo.asset === 'btc' && combo.network === 'mainnet') {
@@ -93,21 +84,10 @@ export function depositWalletDeepLinks(
   combo: DepositCombo,
   qrPayload: string,
   _lnurl?: string,
-  sparkNetwork?: 'MAINNET' | 'REGTEST' | null,
+  sparkNetwork?: 'MAINNET' | null,
 ): WalletDeepLink[] {
+  if (sparkNetwork != null && sparkNetwork !== 'MAINNET') return []
   const { asset, network } = combo
-  if (
-    isRegtestSparkNetwork(sparkNetwork) &&
-    !((asset === 'usdc' || asset === 'usdt') && network === 'solana')
-  ) {
-    return [
-      {
-        id: 'spark-test-wallet',
-        label: 'Spark test wallet',
-        uri: SPARK_TEST_WALLET_URL,
-      },
-    ]
-  }
   if (asset === 'btc' && network === 'mainnet') {
     return [
       { id: 'cashapp', label: 'Cash App', uri: qrPayload },
@@ -148,7 +128,7 @@ export function toDepositDestination(
   copy: { feesCopy: string; estimatedArrivalCopy: string },
   lnurl?: string,
   token?: EvmTokenMeta,
-  sparkNetwork?: 'MAINNET' | 'REGTEST' | null,
+  sparkNetwork?: 'MAINNET' | null,
 ): import('../../types/deposit').DepositDestination {
   const qrPayload = depositQrPayload(combo, address, lnurl, token, sparkNetwork)
   return {
@@ -167,8 +147,8 @@ export function toDepositDestination(
 }
 
 /** Destination chain name for a network, as the wallet rail reports it. */
-export function walletDestinationChain(network: 'MAINNET' | 'REGTEST' | null): string {
-  return network === 'REGTEST' ? 'spark-regtest' : 'spark'
+export function walletDestinationChain(_network: 'MAINNET' | null): string {
+  return 'spark'
 }
 
 /** @deprecated Renamed to {@link walletDestinationChain}. */
