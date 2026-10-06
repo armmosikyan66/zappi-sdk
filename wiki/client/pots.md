@@ -51,7 +51,7 @@ The SDK returns `potClientToken` when nest sends it. Callers must store it as a 
 
 ## Spend tickets (auth-required)
 
-Under `wallet/self-custody/pots/:potId/spend-requests`:
+Under `wallet/pots/:potId/spend-requests`:
 
 - `createPotSpendRequest(potId, { amountCents, destinationAddress, … }, authorizationToken?)`
 - `listPotSpendRequests(potId)`

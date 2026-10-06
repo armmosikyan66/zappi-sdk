@@ -85,7 +85,7 @@ Browser: `apiUrl: ''`, `auth: { kind: 'bff' }`. Auth rules: [[reference/auth]].
 | `createPotAttach(body)` | `POST wallet/pots/attach` |
 | `pollPotAttach(requestId)` | `GET wallet/pots/attach/:requestId` |
 | `approvePotAttach(requestId, body)` | `POST …/approve` |
-| `createPotSpendRequest` / `listPotSpendRequests` / `getPotSpendRequest` | `wallet/self-custody/pots/:potId/spend-requests` |
+| `createPotSpendRequest` / `listPotSpendRequests` / `getPotSpendRequest` | `wallet/pots/:potId/spend-requests` |
 | `approvePotSpendRequest` / `denyPotSpendRequest` | `…/approve` and `…/deny` |
 
 ## Ledger and send — [[client/ledger-send]]

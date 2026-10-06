@@ -253,7 +253,7 @@ export interface NestListPotSpendRequestsResponse {
   requests: AgentPotSpendRequest[]
 }
 
-/** `POST /api/wallet/self-custody/pots/:potId/spend-requests` body. */
+/** `POST /api/wallet/pots/:potId/spend-requests` body. */
 export interface NestCreatePotSpendRequestBody {
   amountCents: number
   destinationAddress: string
