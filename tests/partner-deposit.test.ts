@@ -153,7 +153,7 @@ describe('createPartnerDepositDestination', () => {
     })
   })
 
-  it('swaps BTC deep links for the Spark test wallet when nest is REGTEST', async () => {
+  it('rejects a deposit catalog that is not MAINNET', async () => {
     const { client } = clientWith((req) => {
       if (req.url.endsWith('/api/wallet/deposit-options')) {
         return jsonResponse({ ...CATALOG, sparkNetwork: 'REGTEST' })
@@ -164,12 +164,12 @@ describe('createPartnerDepositDestination', () => {
           mode: 'created',
           created: true,
           projectId: 'native',
-          ref: 'std:native:user_123:spark-regtest:USDB:sparkrt1product',
-          destinationChain: 'spark-regtest',
+          ref: 'std:native:user_123:spark:USDB:spark1product',
+          destinationChain: 'spark',
           destinationAsset: 'USDB',
-          destinationAddress: 'sparkrt1product',
-          addresses: { bitcoin: 'bcrt1qtest' },
-          depositAddress: 'bcrt1qtest',
+          destinationAddress: 'spark1product',
+          addresses: { bitcoin: 'bc1qtest' },
+          depositAddress: 'bc1qtest',
           sourceChain: 'bitcoin',
           enabled: true,
         })
@@ -177,18 +177,12 @@ describe('createPartnerDepositDestination', () => {
       return jsonResponse({ ok: false }, 404)
     })
 
-    const dest = await client.createPartnerDepositDestination(
-      { asset: 'btc', network: 'mainnet' },
-      { userId: 'user_123' },
-    )
-
-    expect(dest.walletDeepLinks).toEqual([
-      {
-        id: 'spark-test-wallet',
-        label: 'Spark test wallet',
-        uri: 'https://docs.spark.money/tools/test-wallet',
-      },
-    ])
+    await expect(
+      client.createPartnerDepositDestination(
+        { asset: 'btc', network: 'mainnet' },
+        { userId: 'user_123' },
+      ),
+    ).rejects.toThrow(/MAINNET/)
   })
 
   it('POSTs partner lightning-address for BTC lightning', async () => {

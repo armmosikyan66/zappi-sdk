@@ -7,7 +7,7 @@ export interface LightningSendWatch {
   session: {
     mnemonic: string
     accountNumber?: number
-    network?: 'MAINNET' | 'REGTEST'
+    network?: 'MAINNET'
   }
   intervalMs?: number
   signal?: AbortSignal

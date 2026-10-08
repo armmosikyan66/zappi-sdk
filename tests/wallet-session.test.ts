@@ -21,7 +21,7 @@ const { subscribeWalletTokenBalances, withHeldSparkWallet } = await import('../s
 
 const opts = {
   mnemonic: 'test mnemonic twelve words here unused unused unused unused unused unused unused unused',
-  accountNumber: 0,
+  accountNumber: 1,
   network: 'MAINNET' as const,
 }
 

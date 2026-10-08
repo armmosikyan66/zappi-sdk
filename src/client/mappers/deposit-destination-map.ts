@@ -18,7 +18,7 @@ type NestDestinationPayload = Partial<NestAccumulationAddressResponse> & {
   estimatedArrivalCopy?: string
   lnurl?: string
   sourceToken?: NestOrchestraSourceToken | null
-  sparkNetwork?: 'MAINNET' | 'REGTEST'
+  sparkNetwork?: 'MAINNET'
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

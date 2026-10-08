@@ -971,7 +971,7 @@ export class ZappiClient {
 
   /* ----------------------------- spend tickets ----------------------------- */
 
-  /** `POST /api/wallet/self-custody/pots/:potId/spend-requests` — create an auth-required pot spend ticket. */
+  /** `POST /api/wallet/pots/:potId/spend-requests` — create an auth-required pot spend ticket. */
   async createPotSpendRequest(
     potId: string,
     body: NestCreatePotSpendRequestBody,
@@ -979,24 +979,24 @@ export class ZappiClient {
     signal?: AbortSignal,
   ): Promise<AgentPotSpendRequest> {
     return this.call<AgentPotSpendRequest>(
-      `wallet/self-custody/pots/${encodeURIComponent(potId)}/spend-requests`,
+      `wallet/pots/${encodeURIComponent(potId)}/spend-requests`,
       { method: 'POST', body, authorizationToken, signal },
     )
   }
 
-  /** `GET /api/wallet/self-custody/pots/:potId/spend-requests` — list spend tickets for the owner. */
+  /** `GET /api/wallet/pots/:potId/spend-requests` — list spend tickets for the owner. */
   async listPotSpendRequests(
     potId: string,
     signal?: AbortSignal,
   ): Promise<AgentPotSpendRequest[]> {
     const res = await this.call<NestListPotSpendRequestsResponse>(
-      `wallet/self-custody/pots/${encodeURIComponent(potId)}/spend-requests`,
+      `wallet/pots/${encodeURIComponent(potId)}/spend-requests`,
       { signal },
     )
     return res.requests ?? []
   }
 
-  /** `GET /api/wallet/self-custody/pots/:potId/spend-requests/:requestId` — get a spend ticket. */
+  /** `GET /api/wallet/pots/:potId/spend-requests/:requestId` — get a spend ticket. */
   async getPotSpendRequest(
     potId: string,
     requestId: string,
@@ -1004,12 +1004,12 @@ export class ZappiClient {
     signal?: AbortSignal,
   ): Promise<AgentPotSpendRequest> {
     return this.call<AgentPotSpendRequest>(
-      `wallet/self-custody/pots/${encodeURIComponent(potId)}/spend-requests/${encodeURIComponent(requestId)}`,
+      `wallet/pots/${encodeURIComponent(potId)}/spend-requests/${encodeURIComponent(requestId)}`,
       { authorizationToken, signal },
     )
   }
 
-  /** `POST /api/wallet/self-custody/pots/:potId/spend-requests/:requestId/approve` — human approve. */
+  /** `POST /api/wallet/pots/:potId/spend-requests/:requestId/approve` — human approve. */
   async approvePotSpendRequest(
     potId: string,
     requestId: string,
@@ -1017,12 +1017,12 @@ export class ZappiClient {
     signal?: AbortSignal,
   ): Promise<AgentPotSpendRequest> {
     return this.call<AgentPotSpendRequest>(
-      `wallet/self-custody/pots/${encodeURIComponent(potId)}/spend-requests/${encodeURIComponent(requestId)}/approve`,
+      `wallet/pots/${encodeURIComponent(potId)}/spend-requests/${encodeURIComponent(requestId)}/approve`,
       { method: 'POST', authorizationToken, signal },
     )
   }
 
-  /** `POST /api/wallet/self-custody/pots/:potId/spend-requests/:requestId/deny` — human deny. */
+  /** `POST /api/wallet/pots/:potId/spend-requests/:requestId/deny` — human deny. */
   async denyPotSpendRequest(
     potId: string,
     requestId: string,
@@ -1030,7 +1030,7 @@ export class ZappiClient {
     signal?: AbortSignal,
   ): Promise<AgentPotSpendRequest> {
     return this.call<AgentPotSpendRequest>(
-      `wallet/self-custody/pots/${encodeURIComponent(potId)}/spend-requests/${encodeURIComponent(requestId)}/deny`,
+      `wallet/pots/${encodeURIComponent(potId)}/spend-requests/${encodeURIComponent(requestId)}/deny`,
       { method: 'POST', authorizationToken, signal },
     )
   }

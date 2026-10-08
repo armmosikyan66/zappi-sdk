@@ -83,7 +83,7 @@ import { createWalletSigner } from '@zappi/sdk/sign'
 
 const signer = await createWalletSigner({
   mnemonic: process.env.ZAPPI_PRODUCT_MNEMONIC!, // partner-held, never logged
-  accountNumber: 0,
+  accountNumber: 1,
   network: 'MAINNET',
 })
 

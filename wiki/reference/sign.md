@@ -13,7 +13,7 @@ import { createWalletSigner } from '@zappimoney/zappi-sdk/sign'
 
 const signer = await createWalletSigner({
   mnemonic: process.env.ZAPPI_PRODUCT_MNEMONIC!,
-  accountNumber: 0,
+  accountNumber: 1,
   network: 'MAINNET',
 })
 
@@ -25,7 +25,7 @@ const { sparkTxHash } = await signer.transferUsdb({
 await signer.cleanup()
 ```
 
-`mnemonic` is required and trimmed. The library does not log it and does not read env itself. `accountNumber` defaults to 0 and must be an integer ≥ 0. `network` defaults to `MAINNET`; only the string `REGTEST` (case-insensitive) selects regtest.
+`mnemonic` is required and trimmed. The library does not log it and does not read env itself. `accountNumber` defaults to 1 and must be exactly 1. `network` defaults to `MAINNET`. Any other network is rejected.
 
 `transferUsdb` calls Spark `transferTokens`. `tokenAmount` must be a positive bigint (USDB smallest units, not cents). Empty identifier or receiver throws `INVALID_PARAMS`. A missing hash throws `NO_HASH`. After `cleanup`, further transfers throw `CLEANED_UP`. `cleanup` is best-effort and does not throw.
 

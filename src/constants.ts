@@ -32,7 +32,7 @@ export const SOURCE_CUSTODY_WALLET = 'user-held' as const satisfies CustodyMode
 export const WITHDRAW_STATUS_AWAITING_SIGNATURE = 'awaiting_signature'
 
 /** HD account index for Integration product wallets created in the Zappi client. */
-export const PRODUCT_WALLET_ACCOUNT_NUMBER = 0
+export const PRODUCT_WALLET_ACCOUNT_NUMBER = 1
 
 /** Default Zappi wallet network when none is provided. */
 export const DEFAULT_WALLET_NETWORK: WalletNetwork = 'MAINNET'
