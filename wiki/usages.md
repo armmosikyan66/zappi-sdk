@@ -114,4 +114,4 @@ Browser: `apiUrl: ''`, `auth: { kind: 'bff' }`. Auth rules: [[reference/auth]].
 
 ## Other exports
 
-Amounts, combos, address families: [[reference/amounts]]. Errors: [[reference/errors]]. Webhooks and quote tokens: [[reference/webhooks]]. Signer: [[reference/sign]]. Hooks: [[reference/react]]. Two-phase: [[flows/two-phase]].
+Amounts, combos, address families: [[reference/amounts]]. Errors: [[reference/errors]]. Webhooks and quote tokens: [[reference/webhooks]]. Signer: [[reference/sign]]. Hooks: [[reference/react]]. Two-phase: [[flows/two-phase]]. Unilateral exit helpers (not a `ZappiClient` method, not a published subpath): [[reference/recovery]].
