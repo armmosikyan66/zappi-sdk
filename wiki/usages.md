@@ -1,7 +1,7 @@
 ---
 type: reference
 tags: [sdk, api]
-updated: 2026-09-22
+updated: 2026-10-17
 ---
 
 # Usages
@@ -85,7 +85,7 @@ Browser: `apiUrl: ''`, `auth: { kind: 'bff' }`. Auth rules: [[reference/auth]].
 | `createPotAttach(body)` | `POST wallet/pots/attach` |
 | `pollPotAttach(requestId)` | `GET wallet/pots/attach/:requestId` |
 | `approvePotAttach(requestId, body)` | `POST …/approve` |
-| `createPotSpendRequest` / `listPotSpendRequests` / `getPotSpendRequest` | `wallet/self-custody/pots/:potId/spend-requests` |
+| `createPotSpendRequest` / `listPotSpendRequests` / `getPotSpendRequest` | `wallet/pots/:potId/spend-requests` |
 | `approvePotSpendRequest` / `denyPotSpendRequest` | `…/approve` and `…/deny` |
 
 ## Ledger and send — [[client/ledger-send]]
@@ -114,4 +114,4 @@ Browser: `apiUrl: ''`, `auth: { kind: 'bff' }`. Auth rules: [[reference/auth]].
 
 ## Other exports
 
-Amounts, combos, address families: [[reference/amounts]]. Errors: [[reference/errors]]. Webhooks and quote tokens: [[reference/webhooks]]. Signer: [[reference/sign]]. Hooks: [[reference/react]]. Two-phase: [[flows/two-phase]].
+Amounts, combos, address families: [[reference/amounts]]. Errors: [[reference/errors]]. Webhooks and quote tokens: [[reference/webhooks]]. Signer: [[reference/sign]]. Hooks: [[reference/react]]. Two-phase: [[flows/two-phase]]. Unilateral exit helpers (not a `ZappiClient` method; published browser subpath `./recovery`): [[reference/recovery]].

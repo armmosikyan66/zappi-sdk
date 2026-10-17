@@ -156,6 +156,10 @@ export interface NestListStandingDepositsResponse {
   ok: true
   deposits: NestStandingDepositDto[]
   nextOffset: number | null
+  /** Last Flashnet sync time in epoch milliseconds, or null if never synced. */
+  syncedAt: number | null
+  /** True when this response kicked off a background Flashnet refresh. */
+  refreshing: boolean
 }
 
 /** `PATCH /api/wallet/standing-deposit-address` body. */

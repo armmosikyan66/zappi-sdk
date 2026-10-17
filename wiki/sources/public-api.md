@@ -6,7 +6,7 @@ date_published: 2026-09-22
 date_ingested: 2026-09-22
 source_path: packages/zappi-sdk/src
 tags: [sdk, source]
-updated: 2026-09-22
+updated: 2026-10-17
 ---
 
 # Public source
@@ -26,7 +26,7 @@ Ingest of the export map and `ZappiClient`. This is the source of truth when [[s
 | Signer | `src/sign/index.ts`, `src/sign/wallet-signer-port.ts` |
 | React | `src/react/index.ts`, `use-deposit.ts`, `use-withdraw.ts`, `use-cashier-events.ts`, `context.tsx` |
 | Types | `src/types/{cashier,deposit,withdraw,transaction,partner,webhook,pots,ledger,send,swap}.ts` |
-| Build entries | `tsup.config.ts`: `index`, `sign/index`, `react/index`, `two-phase` |
+| Build entries | `tsup.config.ts`: `index`, `sign/index`, `react/index`, `realtime/index`, `realtime/react`, `two-phase`, `recovery/index` (`src/recovery/browser.ts`) |
 
 `call` prefixes every path with `/api/`. Empty project key on `projectKey` auth throws `ZappiApiError` 503 `GATEWAY_NOT_CONFIGURED`. Unreachable nest is 503 `GATEWAY_UNREACHABLE`. Aborted caller signal is 499 `CLIENT_CLOSED`. HTTP 204 returns `undefined`.
 

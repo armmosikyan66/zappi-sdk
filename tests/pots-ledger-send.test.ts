@@ -262,14 +262,14 @@ describe('attach flow', () => {
 })
 
 describe('spend tickets', () => {
-  it('createPotSpendRequest POSTs to self-custody path', async () => {
+  it('createPotSpendRequest POSTs to pot spend-requests path', async () => {
     const { client, calls } = clientWith(() =>
       jsonResponse({ id: 's1', potId: 'p1', amountCents: 100, destinationAddress: '0x' }),
     )
     await client.createPotSpendRequest('p1', { amountCents: 100, destinationAddress: '0x' }, 'stepup')
     expect(calls[0]!.method).toBe('POST')
     expect(calls[0]!.url).toBe(
-      'http://nest.test/api/wallet/self-custody/pots/p1/spend-requests',
+      'http://nest.test/api/wallet/pots/p1/spend-requests',
     )
   })
 
@@ -287,7 +287,7 @@ describe('spend tickets', () => {
     )
     await client.getPotSpendRequest('p1', 's1')
     expect(calls[0]!.url).toBe(
-      'http://nest.test/api/wallet/self-custody/pots/p1/spend-requests/s1',
+      'http://nest.test/api/wallet/pots/p1/spend-requests/s1',
     )
   })
 
@@ -298,10 +298,10 @@ describe('spend tickets', () => {
     await client.approvePotSpendRequest('p1', 's1', 'stepup')
     await client.denyPotSpendRequest('p1', 's1', 'stepup')
     expect(calls[0]!.url).toBe(
-      'http://nest.test/api/wallet/self-custody/pots/p1/spend-requests/s1/approve',
+      'http://nest.test/api/wallet/pots/p1/spend-requests/s1/approve',
     )
     expect(calls[1]!.url).toBe(
-      'http://nest.test/api/wallet/self-custody/pots/p1/spend-requests/s1/deny',
+      'http://nest.test/api/wallet/pots/p1/spend-requests/s1/deny',
     )
   })
 })
