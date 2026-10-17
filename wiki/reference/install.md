@@ -1,12 +1,12 @@
 ---
 type: reference
 tags: [sdk, install]
-updated: 2026-09-22
+updated: 2026-10-17
 ---
 
 # Install
 
-`package.json` name is **`@zappimoney/zappi-sdk`**, version **0.3.1**, MIT, Node **≥ 20.9**. `publishConfig.access` is `public`. Repository `https://github.com/armmosikyan66/zappi-sdk`.
+`package.json` name is **`@zappimoney/zappi-sdk`**, version **0.3.10**, MIT, Node **≥ 20.9**. `publishConfig.access` is `public`. Repository `https://github.com/armmosikyan66/zappi-sdk`.
 
 > ⚠️ [[sources/readme]] says `npm install @zappi/sdk` and that the rename landed at 0.2.0. This tree’s package name is still `@zappimoney/zappi-sdk`. Source comments and the README heading use `@zappi/sdk`. Import whichever name your installed package actually resolves.
 
@@ -20,6 +20,7 @@ Published files are `dist` and `README.md`. Dual ESM and CJS. The CLI in this mo
 | `./sign` | `src/sign/index.ts` | `@buildonspark/spark-sdk` ≥ 0.9 (optional peer) |
 | `./react` | `src/react/index.ts` | `react` ≥ 18, `@tanstack/react-query` ≥ 5 (optional peers) |
 | `./two-phase` | `src/quote/two-phase.ts` | none |
+| `./recovery` | `src/recovery/browser.ts` | none. `encrypt.ts` (`node:crypto`) is not in this entry |
 
 Peers are optional so the core install does not pull Spark or React. tsup marks `react`, `@tanstack/react-query`, and `@buildonspark/spark-sdk` as external.
 

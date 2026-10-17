@@ -1,14 +1,14 @@
 ---
 type: reference
 tags: [sdk, recovery, bitcoin, l1]
-updated: 2026-10-15
+updated: 2026-10-17
 ---
 
 # Recovery
 
 Pure helpers for a unilateral bitcoin exit. Source is `src/recovery/`. The web map and the feature flag are in the web wiki at `web/wiki/codebase/l1-recovery.md`. The byte format is `web/wiki/analyses/l1-recovery-bundle-v1.md`.
 
-`package.json` does not export a `./recovery` subpath. Node callers import `src/recovery/index.ts`. The browser entry is `src/recovery/browser.ts`. Web aliases `@zappimoney/zappi-sdk/recovery` to that file so the page never loads `encrypt.ts` (`node:crypto`).
+`package.json` exports `./recovery` from `src/recovery/browser.ts` (tsup entry `recovery/index`). That published build does not include `encrypt.ts`. Node callers that need `encryptBundle` / `decryptBundle` import `src/recovery/index.ts` in this repo; that file is not a package export.
 
 Nothing in this folder calls `sparkClient`, `isTxBroadcast`, or mempool.space. Chain reads go through an injected `ChainSource`. Nest must not receive a seed, a bundle plaintext, or a leaf graph.
 

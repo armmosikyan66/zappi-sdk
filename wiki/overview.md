@@ -1,14 +1,14 @@
 ---
 type: overview
 tags: [sdk, wallet, contract]
-updated: 2026-09-22
+updated: 2026-10-17
 ---
 
 # Overview
 
 The SDK is the shared deposit and withdraw contract for zappi-nest, the Next.js BFF, and partners (BitKong is the example in the package description). It replaces types that used to be copied between nest DTOs and `web/lib/api/types.ts` (from [[sources/readme]]).
 
-Published package name in this repo is **`@zappimoney/zappi-sdk` version 0.3.1**. Source comments and the README title say `@zappi/sdk`. See [[reference/install]].
+Published package name in this repo is **`@zappimoney/zappi-sdk` version 0.3.10**. Source comments and the README title say `@zappi/sdk`. See [[reference/install]].
 
 ## What you import
 
@@ -18,6 +18,7 @@ Published package name in this repo is **`@zappimoney/zappi-sdk` version 0.3.1**
 | `…/sign` | `createWalletSigner()` | peer `@buildonspark/spark-sdk` |
 | `…/react` | React Query hooks and `ZappiClientProvider` | peers `react`, `@tanstack/react-query` |
 | `…/two-phase` | Same orchestrator as the root export, as its own entry | none |
+| `…/recovery` | Browser L1 recovery helpers. Node `encryptBundle` is not in this entry | none |
 
 Full method list: [[usages]].
 
