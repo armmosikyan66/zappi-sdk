@@ -1,10 +1,12 @@
 import { defineConfig } from 'tsup'
 
 /**
- * Dual ESM/CJS build with .d.ts. Three independent entry points so the
- * `exports` map can split the heavy optional subpaths (`/sign`, `/react`)
- * from the tree-shakeable core. No barrel files inside subpaths — each
- * entry imports only what it exports (Vercel React best practices 2.1).
+ * Dual ESM/CJS build with .d.ts. Independent entry points so the `exports`
+ * map can split optional subpaths from the tree-shakeable core. No barrel
+ * files inside subpaths — each entry imports only what it exports.
+ *
+ * `recovery/index` is the browser entry. It must not pull
+ * `src/recovery/encrypt.ts`, which imports `node:crypto`.
  */
 export default defineConfig({
   entry: {
@@ -14,6 +16,7 @@ export default defineConfig({
     'realtime/index': 'src/realtime/index.ts',
     'realtime/react': 'src/realtime/react.tsx',
     'two-phase': 'src/quote/two-phase.ts',
+    'recovery/index': 'src/recovery/browser.ts',
   },
   format: ['esm', 'cjs'],
   dts: true,

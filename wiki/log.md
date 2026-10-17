@@ -1,10 +1,21 @@
 ---
 type: log
 tags: [meta]
-updated: 2026-09-30
+updated: 2026-10-17
 ---
 
 # Wiki Log
+
+## [2026-10-17] ship | Recovery browser export 0.3.10
+
+- touched: wiki/reference/recovery.md, wiki/reference/install.md, wiki/reference/develop.md, wiki/overview.md, wiki/usages.md, wiki/index.md, wiki/sources/public-api.md
+- notes: `./recovery` publishes `src/recovery/browser.ts`. `encrypt.ts` stays out of that entry. CI typechecks and tests on the lockfile Spark pin and on 0.11.0.
+
+## [2026-10-15] manual | Recovery module
+
+- new: wiki/reference/recovery.md
+- touched: wiki/index.md, wiki/usages.md
+- notes: Documents `src/recovery` (Node index vs browser entry, blob layout, planner, session, sweep). Not a package.json export. Web feature map stays in the web wiki. Live regtest is Linear 1-754; the manual checklist is 1-755.
 
 ## [2026-09-22] bootstrap | zappi-sdk wiki
 - new: wiki/index.md, wiki/overview.md, wiki/usages.md, wiki/log.md

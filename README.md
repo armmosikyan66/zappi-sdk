@@ -25,6 +25,7 @@ npm install @tanstack/react-query react  # for /react
 | `@zappi/sdk` | Types, constants, amount/combo/address utils, `ZappiClient`, webhook verify, quote-token, two-phase orchestrator | none |
 | `@zappi/sdk/sign` | `createWalletSigner()` — in-process wallet USDB signer | `@buildonspark/spark-sdk` |
 | `@zappi/sdk/react` | React Query hooks + `ZappiClientProvider` | `react`, `@tanstack/react-query` |
+| `@zappi/sdk/recovery` | Browser L1 recovery helpers (bundle, fees, exit planner). Does not include Node `encryptBundle` | none |
 
 ## Quick start
 
