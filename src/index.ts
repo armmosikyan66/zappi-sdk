@@ -6,6 +6,7 @@
  * - `@zappi/sdk/sign` — Zappi wallet USDB signer (peer: `@buildonspark/spark-sdk`)
  * - `@zappi/sdk/react` — React Query hooks (peer: `react`, `@tanstack/react-query`)
  * - `@zappi/sdk/realtime` — Spark balance stream and cashier SSE events
+ * - `@zappi/sdk/recovery` — browser L1 recovery helpers (no `node:crypto`)
  */
 
 /* --------------------------------- types --------------------------------- */

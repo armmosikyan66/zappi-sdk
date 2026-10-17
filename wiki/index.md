@@ -1,10 +1,10 @@
 ---
 type: index
 tags: [meta, sdk]
-updated: 2026-10-15
+updated: 2026-10-17
 source_count: 2
 page_count: 24
-last_change: 2026-10-15 Recovery helpers in src/recovery, documented on [[reference/recovery]]. No published subpath.
+last_change: 2026-10-17 `./recovery` is the browser entry in package 0.3.10. See [[reference/recovery]].
 ---
 
 # zappi-sdk Wiki
@@ -60,7 +60,7 @@ The buyer CLI that calls this client is documented in `packages/zappi-cli/wiki/`
 - [[reference/errors]] — `ZappiApiError` and known codes.
 - [[reference/webhooks]] — HMAC verify and quote tokens.
 - [[reference/sign]] — `@zappi/sdk/sign` wallet signer.
-- [[reference/recovery]] — unilateral bitcoin exit helpers in `src/recovery` (bundle, fees, package planner, session, sweep). Browser entry avoids `node:crypto`. No `package.json` export yet.
+- [[reference/recovery]] — unilateral bitcoin exit helpers. Published `./recovery` is the browser entry and does not load `node:crypto`.
 - [[reference/react]] — React Query hooks.
 - [[reference/migration]] — 0.1.x aliases still exported at 0.3.1.
 - [[reference/develop]] — build, test, publish.

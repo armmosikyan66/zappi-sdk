@@ -1,6 +1,6 @@
 {
   "name": "@zappimoney/zappi-sdk",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "Zappi deposit/withdraw contract, API client, webhook verification, wallet USDB signer, and React Query hooks. Single source of truth shared by zappi-nest, the Next.js BFF, and partners like BitKong.",
   "license": "MIT",
   "author": "Zappi",
@@ -63,6 +63,13 @@
       "import": "./dist/realtime/react.js",
       "require": "./dist/realtime/react.cjs",
       "default": "./dist/realtime/react.js"
+    },
+    "./recovery": {
+      "types": "./dist/recovery/index.d.ts",
+      "development": "./dist/recovery/index.js",
+      "import": "./dist/recovery/index.js",
+      "require": "./dist/recovery/index.cjs",
+      "default": "./dist/recovery/index.js"
     },
     "./package.json": "./package.json"
   },
