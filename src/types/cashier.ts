@@ -36,13 +36,17 @@ export type NetworkId = BtcNetwork | StableNetwork
 export type DepositCombo =
   | { asset: 'btc'; network: BtcNetwork }
   | { asset: 'usdc' | 'usdt'; network: StableNetwork }
-  | { asset: 'eth'; network: 'ethereum' }
+  | {
+      asset: 'eth'
+      network: 'ethereum' | 'base' | 'arbitrum' | 'optimism' | 'robinhood'
+    }
 
-/** Dollar balance → Lightning. The sender swaps USDB to BTC, then pays the invoice. */
-export type UsdbLightningCombo = { asset: 'usdb'; network: 'lightning' }
+/** Dollar balance on Lightning, or USDB sent straight to a Spark address. */
+export type UsdbRailCombo = { asset: 'usdb'; network: 'lightning' | 'spark' }
+export type UsdbLightningCombo = UsdbRailCombo
 
 /** Valid (asset, network) pairs for on/off-ramp flows. */
-export type CashierCombo = DepositCombo | UsdbLightningCombo
+export type CashierCombo = DepositCombo | UsdbRailCombo
 export type WithdrawCombo = CashierCombo
 
 /** Which ledger a balance / amount belongs to. */
@@ -52,7 +56,7 @@ export type AccountCurrency = 'btc' | 'usd'
  * Zappi wallet network selector (Spark is the underlying rail; the public SDK
  * surface talks about *the wallet's network*, not the rail vendor).
  */
-export type WalletNetwork = 'MAINNET'
+export type WalletNetwork = 'MAINNET' | 'REGTEST'
 
 /** Custody model. Withdraw always resolves to `user-held` in current code. */
 export type CustodyMode = 'custodial' | 'user-held'

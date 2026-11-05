@@ -62,37 +62,61 @@ export function isStableAsset(value: string): value is 'usdc' | 'usdt' {
 /**
  * Is the (asset, network) pairing valid? Encodes the catalog constraints:
  * - btc → mainnet | lightning
- * - eth → ethereum only
- * - tron → usdt only (Orchestra has spark:USDB ↔ tron:USDT, not USDC or native TRX)
+ * - eth → ethereum | base | arbitrum | optimism | robinhood
+ * - tron and plasma → usdt only (Orchestra has no USDC on those chains)
+ * - usdb → lightning, or spark for a direct USDB address send
  * - usdc/usdt → any stable network (subject to the tron rule above)
  */
 export function isValidCashierCombo(
   asset: AssetId | null,
-  network: NetworkId | null,
-): network is NetworkId {
+  network: string | null,
+): boolean {
   if (!asset || !network) return false
-  if (asset === 'usdb') return network === 'lightning'
+  if (asset === 'usdb') return network === 'lightning' || network === 'spark'
   if (asset === 'btc') return (BTC_NETWORKS as readonly string[]).includes(network)
-  if (asset === 'eth') return network === 'ethereum'
-  // Orchestra has spark:USDB ↔ tron:USDT, not USDC or native TRX.
-  if (network === 'tron') return asset === 'usdt'
+  if (asset === 'eth') {
+    return (
+      network === 'ethereum' ||
+      network === 'base' ||
+      network === 'arbitrum' ||
+      network === 'optimism' ||
+      network === 'robinhood'
+    )
+  }
+  // Orchestra has no USDC route on TRON or Plasma.
+  if (network === 'tron' || network === 'plasma') return asset === 'usdt'
   return (STABLE_NETWORKS as readonly string[]).includes(network)
 }
 
 /** Build a typed combo from a validated (asset, network) pair. */
-export function buildCashierCombo(asset: AssetId, network: NetworkId): CashierCombo {
-  if (asset === 'usdb') return { asset: 'usdb', network: 'lightning' }
+export function buildCashierCombo(asset: AssetId, network: string): CashierCombo {
+  if (asset === 'usdb') {
+    return {
+      asset: 'usdb',
+      network: network === 'spark' ? 'spark' : 'lightning',
+    }
+  }
   if (asset === 'btc') return { asset: 'btc', network: network as BtcNetwork }
-  if (asset === 'eth') return { asset: 'eth', network: 'ethereum' }
+  if (asset === 'eth') {
+    return {
+      asset: 'eth',
+      network: network as 'ethereum' | 'base' | 'arbitrum' | 'optimism' | 'robinhood',
+    }
+  }
   return { asset, network: network as StableNetwork }
 }
 
 /** Resolve a typed combo from possibly-null inputs, or null if invalid. */
 export function resolveCashierCombo(
   asset: AssetId | null,
-  network: NetworkId | null,
+  network: string | null,
 ): CashierCombo | null {
-  if (!asset || !isValidCashierCombo(asset, network)) return null
+  if (asset === 'usdb') {
+    return network === 'lightning' || network === 'spark'
+      ? { asset: 'usdb', network }
+      : null
+  }
+  if (!asset || !network || !isValidCashierCombo(asset, network)) return null
   return buildCashierCombo(asset, network)
 }
 
@@ -101,7 +125,8 @@ export function parseCashierCombo(
   asset: string | null,
   network: string | null,
 ): CashierCombo | null {
-  if (!isCashierAsset(asset) || !isCashierNetwork(network)) return null
+  if (asset === 'usdb') return resolveCashierCombo(asset, network)
+  if (!isCashierAsset(asset) || !network) return null
   return resolveCashierCombo(asset, network)
 }
 
