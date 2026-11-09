@@ -37,6 +37,8 @@ export interface NestCreateDepositBtcBody {
   idempotencyKey: string
   sparkTxHash?: string
   sourceTxHash?: string
+  /** Required when `sourceChain` is not Spark. An address on that source chain. */
+  refundAddress?: string
 }
 
 export interface NestSwapExecuteResponse {
