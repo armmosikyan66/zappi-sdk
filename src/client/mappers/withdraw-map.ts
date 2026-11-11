@@ -1,5 +1,6 @@
 import type { CashierCombo, WithdrawCombo } from '../../types/cashier'
 import type {
+  UsdbWithdrawNetworkOption,
   WithdrawOption,
   WithdrawalConfirmation,
   WithdrawalEstimate,
@@ -23,6 +24,7 @@ import type {
   NestWithdrawalOptionsResponse,
 } from '../../types/partner'
 import type { WithdrawQuotePayload } from '../../quote/quote-token'
+import { publishedFeeModel, quotedRailFields } from './published-fee'
 
 /** Map a raw nest withdrawal-options response to the clean frontend catalog. */
 export function mapNestWithdrawOptions(
@@ -48,6 +50,10 @@ export function mapNestWithdrawOptions(
             ...(network.maxWithdrawCents !== undefined
               ? { maxWithdrawCents: network.maxWithdrawCents }
               : {}),
+            ...(network.minAmountSmallest
+              ? { minAmountSmallest: network.minAmountSmallest }
+              : {}),
+            ...withdrawQuoteFields(option.asset, network),
           },
         ]
       })
@@ -57,23 +63,31 @@ export function mapNestWithdrawOptions(
     }
 
     if (option.asset === 'usdb') {
-      const networks = option.networks.flatMap((network) => {
-        if (network.id !== 'lightning') return []
-        return [
-          {
-            id: 'lightning' as const,
-            name: network.name,
-            typicalFeeCopy: network.typicalFeeCopy,
-            estimatedArrivalCopy: network.estimatedArrivalCopy,
-            ...(network.minWithdrawCents !== undefined
-              ? { minWithdrawCents: network.minWithdrawCents }
-              : {}),
-            ...(network.maxWithdrawCents !== undefined
-              ? { maxWithdrawCents: network.maxWithdrawCents }
-              : {}),
-          },
-        ]
-      })
+      const networks: UsdbWithdrawNetworkOption[] = option.networks.flatMap(
+        (network) => {
+          if (network.id !== 'lightning' && network.id !== 'spark') return []
+          const id: UsdbWithdrawNetworkOption['id'] =
+            network.id === 'spark' ? 'spark' : 'lightning'
+          return [
+            {
+              id,
+              name: network.name,
+              typicalFeeCopy: network.typicalFeeCopy,
+              estimatedArrivalCopy: network.estimatedArrivalCopy,
+              ...(network.minWithdrawCents !== undefined
+                ? { minWithdrawCents: network.minWithdrawCents }
+                : {}),
+              ...(network.maxWithdrawCents !== undefined
+                ? { maxWithdrawCents: network.maxWithdrawCents }
+                : {}),
+              ...(network.minAmountSmallest
+                ? { minAmountSmallest: network.minAmountSmallest }
+                : {}),
+              ...withdrawQuoteFields(option.asset, network),
+            },
+          ]
+        },
+      )
       if (networks.length === 0) continue
       mapped.push({ asset: 'usdb', networks })
       continue
@@ -95,6 +109,10 @@ export function mapNestWithdrawOptions(
           ...(network.maxWithdrawCents !== undefined
             ? { maxWithdrawCents: network.maxWithdrawCents }
             : {}),
+          ...(network.minAmountSmallest
+            ? { minAmountSmallest: network.minAmountSmallest }
+            : {}),
+          ...withdrawQuoteFields(option.asset, network),
         },
       ]
     })
@@ -103,6 +121,43 @@ export function mapNestWithdrawOptions(
   }
 
   return mapped
+}
+
+const ADDRESS_FAMILIES = [
+  'spark',
+  'solana',
+  'tron',
+  'evm',
+  'bitcoin',
+  'lightning',
+] as const
+
+type AddressFamily = (typeof ADDRESS_FAMILIES)[number]
+
+function withdrawQuoteFields(
+  asset: string,
+  network: {
+    feeBps?: number
+    feeMinCents?: number
+    feeCents?: number | null
+    netCents?: number | null
+    minimumGrossCents?: number | null
+    family?: string
+  },
+): {
+  feeBps?: number
+  feeMinCents?: number
+  feeCents?: number
+  netCents?: number
+  minimumGrossCents?: number
+  family?: AddressFamily
+} {
+  const family = ADDRESS_FAMILIES.find((entry) => entry === network.family)
+  return {
+    ...quotedRailFields(network),
+    ...publishedFeeModel(asset, network),
+    ...(family ? { family } : {}),
+  }
 }
 
 /** Nest asset code (uppercase) for a combo. */
@@ -150,6 +205,14 @@ export function mapNestEstimate(
   const amountCents = estimate?.amountCents ?? nestAmountCents(req, btcRate)
   const feeCents = nullableNumber(estimate?.feeCents)
   const receiveCents = nullableNumber(estimate?.receiveCents)
+  const maxReceiveCents = nullableNumber(estimate?.maxReceiveCents)
+  const receiveMeta = {
+    ...(estimate?.requestedReceiveCents != null
+      ? { requestedReceiveCents: estimate.requestedReceiveCents }
+      : {}),
+    ...(estimate?.receiveExact != null ? { receiveExact: estimate.receiveExact } : {}),
+    ...(maxReceiveCents !== undefined ? { maxReceiveCents } : {}),
+  }
   const maxSats =
     maxWithdrawableCents !== undefined ? usdCentsToBtcSats(maxWithdrawableCents, btcRate) : undefined
 
@@ -172,6 +235,7 @@ export function mapNestEstimate(
       ...(receiveCents !== undefined ? { netReceivedCents: receiveCents } : {}),
       ...(maxSats !== undefined ? { maxWithdrawableSats: maxSats } : {}),
       ...(maxWithdrawableCents !== undefined ? { maxWithdrawableCents } : {}),
+      ...receiveMeta,
       estimatedArrivalCopy: withdrawArrivalCopy(req.combo),
     }
   }
@@ -186,6 +250,7 @@ export function mapNestEstimate(
         ? { netReceivedCents: Math.max(0, amountCents - feeCents) }
         : {}),
     ...(maxWithdrawableCents !== undefined ? { maxWithdrawableCents } : {}),
+    ...receiveMeta,
     estimatedArrivalCopy: withdrawArrivalCopy(req.combo),
   }
 }

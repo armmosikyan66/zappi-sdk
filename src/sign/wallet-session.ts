@@ -15,7 +15,7 @@ import {
 export interface NormalizedWalletSession {
   mnemonic: string
   accountNumber: number
-  network: 'MAINNET'
+  network: 'MAINNET' | 'REGTEST'
 }
 
 export interface WalletTokenBalanceAmounts {

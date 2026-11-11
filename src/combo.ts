@@ -20,6 +20,14 @@ export const STABLE_NETWORKS = [
   'polygon',
   'bsc',
   'avalanche',
+  'arc',
+  'tempo',
+  'monad',
+  'hyperevm',
+  'plasma',
+  'robinhood',
+  'sei',
+  'hypercore',
 ] as const satisfies readonly StableNetwork[]
 
 export const ALL_CASHIER_NETWORKS = [...BTC_NETWORKS, ...STABLE_NETWORKS] as const

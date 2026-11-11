@@ -301,12 +301,25 @@ export class ZappiClient {
    */
   async listStandingDeposits(
     userId: string,
-    opts: { limit?: number; offset?: number } = {},
+    opts: {
+      limit?: number
+      offset?: number
+      ledger?: 'usd' | 'btc'
+      destinationChain?: string
+      destinationAsset?: string
+    } = {},
     signal?: AbortSignal,
   ): Promise<NestListStandingDepositsResponse> {
     const query = new URLSearchParams({ userId })
     if (opts.limit != null) query.set('limit', String(opts.limit))
     if (opts.offset != null) query.set('offset', String(opts.offset))
+    if (opts.ledger) query.set('ledger', opts.ledger)
+    if (opts.destinationChain) {
+      query.set('destinationChain', opts.destinationChain)
+    }
+    if (opts.destinationAsset) {
+      query.set('destinationAsset', opts.destinationAsset)
+    }
     return this.call<NestListStandingDepositsResponse>(
       `wallet/standing-deposit-address/deposits?${query.toString()}`,
       { signal },
@@ -1121,16 +1134,30 @@ export class ZappiClient {
     )
   }
 
-  /** `GET /api/wallet/send/estimate?asset=&networkId=&amountCents=&address=` — stateless send estimate. */
+  /** `GET /api/wallet/send/estimate` — stateless send estimate. Send `amountCents` or `receiveCents`, not both. */
   async estimateSend(
-    query: { asset: string; networkId: string; amountCents: number; address?: string },
+    query: {
+      asset: string
+      networkId: string
+      amountCents?: number
+      receiveCents?: number
+      balanceCents?: number
+      address?: string
+    },
     signal?: AbortSignal,
   ): Promise<NestEstimateSendResponse> {
     const params = new URLSearchParams({
       asset: query.asset,
       networkId: query.networkId,
-      amountCents: String(query.amountCents),
     })
+    if (query.receiveCents != null) {
+      params.set('receiveCents', String(query.receiveCents))
+    } else if (query.amountCents != null) {
+      params.set('amountCents', String(query.amountCents))
+    }
+    if (query.balanceCents != null) {
+      params.set('balanceCents', String(query.balanceCents))
+    }
     if (query.address) params.set('address', query.address)
     return this.call<NestEstimateSendResponse>(
       `wallet/send/estimate?${params.toString()}`,
@@ -1176,8 +1203,8 @@ export class ZappiClient {
 
   /**
    * `POST /api/wallet/swap/deposit-btc` — quote or submit a live source → spark/BTC
-   * deposit. Spark sources retry with `sparkTxHash`; on-chain sources retry with
-   * `sourceTxHash`.
+   * deposit. Spark sources retry with `sparkTxHash`. On-chain sources send
+   * `refundAddress` on that chain, then retry with `sourceTxHash`.
    */
   async executeDepositBtc(
     body: NestCreateDepositBtcBody,

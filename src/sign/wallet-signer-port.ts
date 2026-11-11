@@ -19,8 +19,8 @@ export interface CreateWalletSignerOptions {
   mnemonic: string
   /** HD account index. Defaults to 0. */
   accountNumber?: number
-  /** Wallet network. Defaults to MAINNET. */
-  network?: 'MAINNET'
+  /** Wallet network. Defaults to MAINNET. REGTEST is the hosted test network. */
+  network?: 'MAINNET' | 'REGTEST'
 }
 
 /* ------------------------- legacy aliases (0.1.x) ------------------------- */

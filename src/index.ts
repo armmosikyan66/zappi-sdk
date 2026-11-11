@@ -95,6 +95,7 @@ export {
 } from './client/zappi-client'
 /* client mappers (for partners that want raw nest → clean mapping) */
 export { mapNestDepositOptions, lookupDepositNetworkCopy, nestSparkNetwork } from './client/mappers/deposit-map'
+export { publishedFeeModel, quotedRailFields } from './client/mappers/published-fee'
 export {
   mapNestWithdrawOptions,
   mapNestEstimate,

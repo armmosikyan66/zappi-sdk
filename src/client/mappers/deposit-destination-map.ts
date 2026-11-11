@@ -18,7 +18,7 @@ type NestDestinationPayload = Partial<NestAccumulationAddressResponse> & {
   estimatedArrivalCopy?: string
   lnurl?: string
   sourceToken?: NestOrchestraSourceToken | null
-  sparkNetwork?: 'MAINNET'
+  sparkNetwork?: 'MAINNET' | 'REGTEST'
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -60,8 +60,13 @@ export function mapNestDepositDestination(
     throw new Error('mapNestDepositDestination: nest response missing depositAddress')
   }
 
+  if (combo.asset === 'usdb' && combo.network !== 'lightning') {
+    throw new Error('mapNestDepositDestination: USDB deposits are Lightning only')
+  }
+
   const token = nestSourceTokenMeta(data)
 
+  const network = combo.asset === 'usdb' ? 'lightning' : combo.network
   const qrPayload = depositQrPayload(combo as DepositCombo, address, data.lnurl, token, data.sparkNetwork)
   const copy = {
     feesCopy: data.feesCopy ?? '',
@@ -70,7 +75,7 @@ export function mapNestDepositDestination(
 
   return {
     asset: combo.asset,
-    network: combo.network,
+    network,
     address,
     qrPayload,
     uriScheme: depositUriScheme(combo as DepositCombo),

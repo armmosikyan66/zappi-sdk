@@ -42,6 +42,7 @@ describe('combo', () => {
     it('identifies stable networks', () => {
       expect(isStableNetwork('solana')).toBe(true)
       expect(isStableNetwork('ethereum')).toBe(true)
+      expect(isStableNetwork('arc')).toBe(true)
       expect(isStableNetwork('mainnet')).toBe(false)
     })
   })
@@ -71,6 +72,11 @@ describe('combo', () => {
     it('tron only accepts usdt (not usdc)', () => {
       expect(isValidCashierCombo('usdt', 'tron')).toBe(true)
       expect(isValidCashierCombo('usdc', 'tron')).toBe(false)
+    })
+    it('accepts a catalog chain and keeps plasma USDT-only', () => {
+      expect(isValidCashierCombo('usdc', 'arc')).toBe(true)
+      expect(isValidCashierCombo('usdt', 'plasma')).toBe(true)
+      expect(isValidCashierCombo('usdc', 'plasma')).toBe(false)
     })
     it('rejects nulls', () => {
       expect(isValidCashierCombo(null, 'solana')).toBe(false)

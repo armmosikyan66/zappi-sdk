@@ -1,14 +1,16 @@
 import type { DepositOption } from '../../types/deposit'
 import { isCashierAsset, isOrchestraDepositChain, isBtcNetwork } from '../../combo'
 import type { NestDepositOptionsResponse } from '../../types/partner'
+import { publishedFeeModel, quotedRailFields } from './published-fee'
 
-/** Spark network stamped by nest onto the deposit catalog. Only MAINNET is valid. */
+/** Spark network stamped by nest onto the deposit catalog. */
 export function nestSparkNetwork(
   payload: NestDepositOptionsResponse | null | undefined,
-): 'MAINNET' {
+): 'MAINNET' | 'REGTEST' {
   const value = String(payload?.sparkNetwork ?? '').trim().toUpperCase()
   if (value === '' || value === 'MAINNET') return 'MAINNET'
-  throw new Error('SPARK_NETWORK must be MAINNET.')
+  if (value === 'REGTEST') return 'REGTEST'
+  throw new Error('SPARK_NETWORK must be MAINNET or REGTEST.')
 }
 
 /** Map a raw nest deposit-options response to the clean frontend catalog. */
@@ -25,7 +27,7 @@ export function mapNestDepositOptions(
     if (option.asset === 'btc') {
       const networks = option.networks.flatMap((network) => {
         if (!isBtcNetwork(network.id)) return []
-        return [{ ...depositNetwork(network), id: network.id }]
+        return [{ ...depositNetwork(option.asset, network), id: network.id }]
       })
       if (networks.length === 0) continue
       mapped.push({ asset: 'btc', networks })
@@ -34,7 +36,7 @@ export function mapNestDepositOptions(
 
     const networks = option.networks.flatMap((network) => {
       if (!isOrchestraDepositChain(network.id)) return []
-      return [depositNetwork(network)]
+      return [depositNetwork(option.asset, network)]
     })
     if (networks.length === 0) continue
     mapped.push({ asset: option.asset, networks })
@@ -43,13 +45,21 @@ export function mapNestDepositOptions(
   return mapped
 }
 
-function depositNetwork(network: {
+function depositNetwork(asset: string, network: {
   id: string
   name: string
   typicalFeeCopy?: string
   estimatedArrivalCopy: string
   minDepositCents?: number
+  limitFloorCents?: number
+  maxDepositCents?: number
+  minAmountSmallest?: string
   limitCopy?: string
+  feeCents?: number
+  netCents?: number
+  minimumGrossCents?: number
+  feeBps?: number
+  feeMinCents?: number
 }) {
   return {
     id: network.id,
@@ -59,7 +69,18 @@ function depositNetwork(network: {
     ...(network.minDepositCents !== undefined
       ? { minDepositCents: network.minDepositCents }
       : {}),
+    ...(network.limitFloorCents !== undefined
+      ? { limitFloorCents: network.limitFloorCents }
+      : {}),
+    ...(network.maxDepositCents !== undefined
+      ? { maxDepositCents: network.maxDepositCents }
+      : {}),
+    ...(network.minAmountSmallest
+      ? { minAmountSmallest: network.minAmountSmallest }
+      : {}),
     ...(network.limitCopy ? { limitCopy: network.limitCopy } : {}),
+    ...quotedRailFields(network),
+    ...publishedFeeModel(asset, network),
   }
 }
 

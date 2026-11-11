@@ -153,10 +153,10 @@ describe('createPartnerDepositDestination', () => {
     })
   })
 
-  it('rejects a deposit catalog that is not MAINNET', async () => {
+  it('rejects a deposit catalog on an unknown Spark network', async () => {
     const { client } = clientWith((req) => {
       if (req.url.endsWith('/api/wallet/deposit-options')) {
-        return jsonResponse({ ...CATALOG, sparkNetwork: 'REGTEST' })
+        return jsonResponse({ ...CATALOG, sparkNetwork: 'SIGNET' })
       }
       if (req.url.endsWith('/api/wallet/standing-deposit-address')) {
         return jsonResponse({

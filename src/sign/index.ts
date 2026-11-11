@@ -181,10 +181,14 @@ function normalizeWalletSession(opts: CreateWalletSignerOptions): NormalizedWall
   if (accountNumber !== 1) {
     throw new WalletSignerError('INVALID_ACCOUNT', 'accountNumber must be 1')
   }
-  const network = (opts.network ?? DEFAULT_WALLET_NETWORK).toUpperCase()
-  if (network !== 'MAINNET') {
-    throw new WalletSignerError('INVALID_NETWORK', 'network must be MAINNET')
+  const raw = (opts.network ?? DEFAULT_WALLET_NETWORK).trim().toUpperCase()
+  if (raw !== 'MAINNET' && raw !== 'REGTEST') {
+    throw new WalletSignerError(
+      'INVALID_NETWORK',
+      'network must be MAINNET or REGTEST',
+    )
   }
+  const network = raw === 'REGTEST' ? 'REGTEST' : 'MAINNET'
   return { mnemonic, accountNumber, network }
 }
 

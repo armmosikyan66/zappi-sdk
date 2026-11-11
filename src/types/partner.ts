@@ -14,7 +14,20 @@ export interface NestDepositNetworkOption {
   typicalFeeCopy?: string
   estimatedArrivalCopy: string
   minDepositCents?: number
+  /** Live `/limits` band. Enforcement only. Not a displayed minimum. */
+  limitFloorCents?: number
+  /** Live `/limits` band maximum in cents. */
+  maxDepositCents?: number
+  /** Source smallest units that still clear the rail. Sats for Bitcoin. */
+  minAmountSmallest?: string
   limitCopy?: string
+  feeCents?: number
+  netCents?: number
+  minimumGrossCents?: number
+  /** Learned fee rate in basis points. Verified stable rows only. */
+  feeBps?: number
+  /** Minimum fee in USD cents for `feeBps`. */
+  feeMinCents?: number
 }
 
 export interface NestDepositAssetOption {
@@ -24,7 +37,7 @@ export interface NestDepositAssetOption {
 
 export interface NestDepositOptionsResponse {
   ok: true
-  sparkNetwork?: 'MAINNET'
+  sparkNetwork?: 'MAINNET' | 'REGTEST'
   options: NestDepositAssetOption[]
 }
 
@@ -167,6 +180,11 @@ export interface NestPatchStandingDepositAddressRequest {
   userId: string
   enabled: boolean
   idempotencyKey?: string
+  /** With destinationAsset, selects the instruction. Wins over ledger. */
+  destinationChain?: string
+  destinationAsset?: string
+  /** usd is spark/USDB. btc is spark/BTC. */
+  ledger?: 'usd' | 'btc'
 }
 
 /** `POST /api/wallet/standing-deposit-address/resolve` body. */
@@ -178,6 +196,9 @@ export interface NestResolveStandingDepositsRequest {
   batchId?: string
   refundAddress: string
   idempotencyKey?: string
+  destinationChain?: string
+  destinationAsset?: string
+  ledger?: 'usd' | 'btc'
 }
 
 export interface NestResolveStandingDepositsResponse {
@@ -206,6 +227,16 @@ export interface NestWithdrawNetworkOption {
   estimatedArrivalCopy: string
   minWithdrawCents?: number
   maxWithdrawCents?: number
+  /** Source smallest units that still clear the rail. Sats for Bitcoin. */
+  minAmountSmallest?: string
+  /** Learned fee rate in basis points. Verified stable rows only. */
+  feeBps?: number
+  /** Minimum fee in USD cents for `feeBps`. */
+  feeMinCents?: number
+  feeCents?: number
+  netCents?: number
+  minimumGrossCents?: number
+  family?: 'spark' | 'solana' | 'tron' | 'evm' | 'bitcoin' | 'lightning'
 }
 
 export interface NestWithdrawAssetOption {
@@ -230,6 +261,9 @@ export interface NestWithdrawEstimateResponse {
   feeAsset?: string | null
   feeUsd?: string | null
   estimatedOut?: string | null
+  requestedReceiveCents?: number
+  receiveExact?: boolean
+  maxReceiveCents?: number | null
 }
 
 /**

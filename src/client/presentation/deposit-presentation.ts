@@ -57,7 +57,7 @@ export function depositQrPayload(
   address: string,
   _lnurl?: string,
   token?: EvmTokenMeta,
-  _sparkNetwork?: 'MAINNET' | null,
+  _sparkNetwork?: 'MAINNET' | 'REGTEST' | null,
 ): string {
   if (isSparkIdentityAddress(address)) return address
   if (combo.asset === 'btc' && combo.network === 'mainnet') {
@@ -84,7 +84,7 @@ export function depositWalletDeepLinks(
   combo: DepositCombo,
   qrPayload: string,
   _lnurl?: string,
-  sparkNetwork?: 'MAINNET' | null,
+  sparkNetwork?: 'MAINNET' | 'REGTEST' | null,
 ): WalletDeepLink[] {
   if (sparkNetwork != null && sparkNetwork !== 'MAINNET') return []
   const { asset, network } = combo
@@ -128,7 +128,7 @@ export function toDepositDestination(
   copy: { feesCopy: string; estimatedArrivalCopy: string },
   lnurl?: string,
   token?: EvmTokenMeta,
-  sparkNetwork?: 'MAINNET' | null,
+  sparkNetwork?: 'MAINNET' | 'REGTEST' | null,
 ): import('../../types/deposit').DepositDestination {
   const qrPayload = depositQrPayload(combo, address, lnurl, token, sparkNetwork)
   return {
@@ -147,8 +147,10 @@ export function toDepositDestination(
 }
 
 /** Destination chain name for a network, as the wallet rail reports it. */
-export function walletDestinationChain(_network: 'MAINNET' | null): string {
-  return 'spark'
+export function walletDestinationChain(
+  network: 'MAINNET' | 'REGTEST' | null,
+): string {
+  return network === 'REGTEST' ? 'spark-regtest' : 'spark'
 }
 
 /** @deprecated Renamed to {@link walletDestinationChain}. */

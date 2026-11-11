@@ -38,6 +38,8 @@ export interface AgentPot {
   grantStatus: AgentPotGrantStatus
   createdAt: string
   grants: AgentPotGrant[]
+  /** Set when the owner archives this pot. Absent means it is listed. */
+  archivedAt?: string | null
 }
 
 export interface NestListPotsResponse {

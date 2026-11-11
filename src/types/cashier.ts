@@ -24,6 +24,14 @@ export type StableNetwork =
   | 'polygon'
   | 'bsc'
   | 'avalanche'
+  | 'arc'
+  | 'tempo'
+  | 'monad'
+  | 'hyperevm'
+  | 'plasma'
+  | 'robinhood'
+  | 'sei'
+  | 'hypercore'
 
 /** Every network id the cashier understands. */
 export type NetworkId = BtcNetwork | StableNetwork
