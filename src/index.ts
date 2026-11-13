@@ -82,6 +82,12 @@ export type { ZappiErrorCode, ZappiErrorBody } from './errors'
 
 /* --------------------------------- client --------------------------------- */
 export { ZappiClient } from './client/zappi-client'
+export { FlashnetServerClient } from './client/flashnet-server-client'
+export type {
+  FlashnetServerClientOptions,
+  StandingDepositAddressQuery,
+} from './client/flashnet-server-client'
+export { parseStandingDepositAddress } from './client/parse-standing-address'
 export type {
   ZappiAuth,
   ZappiClientOptions,

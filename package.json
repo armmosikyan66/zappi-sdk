@@ -1,6 +1,6 @@
 {
   "name": "@zappimoney/zappi-sdk",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "description": "Zappi deposit/withdraw contract, API client, webhook verification, wallet USDB signer, and React Query hooks. Single source of truth shared by zappi-nest, the Next.js BFF, and partners like BitKong.",
   "license": "MIT",
   "author": "Zappi",
@@ -82,6 +82,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "prepare": "npm run build",
     "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest",
