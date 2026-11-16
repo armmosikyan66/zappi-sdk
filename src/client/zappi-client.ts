@@ -172,8 +172,10 @@ export interface PartnerDepositDestinationOpts {
   nativeReference?: string
 }
 
+export type ZappiHttpMethod = 'GET' | 'POST' | 'DELETE' | 'PATCH' | 'QUERY'
+
 interface CallOptions {
-  method?: 'GET' | 'POST' | 'DELETE' | 'PATCH'
+  method?: ZappiHttpMethod
   body?: unknown
   /** One-time passkey step-up token (`X-Zappi-Authorization`). */
   authorizationToken?: string | null
@@ -1246,7 +1248,7 @@ export class ZappiClient {
   async request<T>(
     path: string,
     opts: {
-      method?: 'GET' | 'POST' | 'DELETE' | 'PATCH'
+      method?: ZappiHttpMethod
       body?: unknown
       authorizationToken?: string | null
       deviceCode?: string | null
