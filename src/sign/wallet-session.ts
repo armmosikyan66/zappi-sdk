@@ -171,6 +171,17 @@ function bind(hold: Hold): void {
       })
     },
   )
+  const named = SparkWalletEvent as unknown as { DepositConfirmed?: string }
+  const onDeposit = hold.wallet.on.bind(hold.wallet) as (
+    event: string,
+    listener: (depositId: string, updatedBalance?: bigint) => void,
+  ) => void
+  onDeposit(named.DepositConfirmed ?? 'deposit:confirmed', (depositId, updatedBalance) => {
+    emitTransfer(hold, {
+      transferId: String(depositId),
+      updatedBalanceSats: (updatedBalance ?? 0n).toString(),
+    })
+  })
 }
 
 function emit(
