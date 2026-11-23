@@ -49,9 +49,24 @@ describe('subscribeWalletTokenBalances', () => {
 
     expect(getOrCreateWallet).toHaveBeenCalledTimes(1)
     expect(getBalance).toHaveBeenCalled()
+    expect(getCachedBalance).not.toHaveBeenCalled()
     expect(cleanup).not.toHaveBeenCalled()
 
     await stop()
     expect(cleanup).toHaveBeenCalledTimes(1)
+  })
+
+  it('stays quiet when getBalance fails', async () => {
+    getBalance.mockRejectedValueOnce(new Error('sync failed'))
+    const seen: string[] = []
+    const stop = await subscribeWalletTokenBalances(opts, () => {
+      seen.push('emitted')
+    })
+    await vi.waitFor(() => {
+      expect(getBalance).toHaveBeenCalled()
+    })
+    expect(seen).toEqual([])
+    expect(getCachedBalance).not.toHaveBeenCalled()
+    await stop()
   })
 })
