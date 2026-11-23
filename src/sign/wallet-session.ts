@@ -104,9 +104,10 @@ export async function releaseHeldWallet(
 /**
  * Push USDB (and other token) balances for a wallet whose seed we hold.
  * Listens to `token-balance:update`. On subscribe and on `stream:connected`,
- * reads `getBalance()` so a refresh syncs token outputs with the coordinator
- * instead of painting the in-memory cache. A dropped stream does not replay
- * missed events. If that sync fails, falls back to `getCachedBalance()`.
+ * reads `getBalance()` so a refresh syncs token outputs with the coordinator.
+ * A failed read stays quiet. `getCachedBalance()` is not emitted on this
+ * callback, because the page cannot tell it apart from a live token event.
+ * A dropped stream does not replay missed events.
  */
 export async function subscribeHeldWallet(
   input: NormalizedWalletSession,
@@ -206,15 +207,8 @@ async function publishSnapshot(hold: Hold): Promise<void> {
   try {
     const { tokenBalances } = await hold.wallet.getBalance()
     emit(hold, tokenBalances)
-    return
   } catch {
-    // Coordinator sync can fail on a cold start. The cache is still the
-    // last stream snapshot; the next connect retries getBalance().
-  }
-  try {
-    const { tokenBalances } = await hold.wallet.getCachedBalance()
-    emit(hold, tokenBalances)
-  } catch {
-    // The next token-balance:update or stream:connected retries the fill.
+    // A failed coordinator read stays quiet. The page seeds an empty hero
+    // from getCachedBalance() on its own listener.
   }
 }
